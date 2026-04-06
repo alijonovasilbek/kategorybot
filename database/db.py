@@ -25,6 +25,8 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     orders = relationship("Order", back_populates="user")
     cart_items = relationship("CartItem", back_populates="user")
+    reviews = relationship("Review", back_populates="user")
+    wishlist = relationship("Wishlist", back_populates="user")
 
 class Category(Base):
     __tablename__ = "categories"
@@ -47,15 +49,17 @@ class Product(Base):
     description_ru = Column(Text, nullable=True)
     price = Column(Float, nullable=False)
     old_price = Column(Float, nullable=True)
-    images = Column(JSON, default=list)  # list of image URLs (up to 4)
+    images = Column(JSON, default=list)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
-    tags = Column(JSON, default=list)  # for similar products
+    tags = Column(JSON, default=list)
     is_active = Column(Boolean, default=True)
     stock = Column(Integer, default=100)
     created_at = Column(DateTime, default=datetime.utcnow)
     category = relationship("Category", back_populates="products")
     cart_items = relationship("CartItem", back_populates="product")
     order_items = relationship("OrderItem", back_populates="product")
+    reviews = relationship("Review", back_populates="product")
+    wishlist = relationship("Wishlist", back_populates="product")
 
 class CartItem(Base):
     __tablename__ = "cart_items"
@@ -71,12 +75,17 @@ class Order(Base):
     __tablename__ = "orders"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    status = Column(String(50), default="pending")  # pending, confirmed, delivering, delivered, cancelled
+    status = Column(String(50), default="pending")
     total_price = Column(Float, nullable=False)
+    delivery_price = Column(Float, default=0)
     address = Column(Text, nullable=True)
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
+    distance_km = Column(Float, nullable=True)
     comment = Column(Text, nullable=True)
+    coupon_code = Column(String(50), nullable=True)
+    discount_amount = Column(Float, default=0)
+    group_message_id = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     user = relationship("User", back_populates="orders")
@@ -91,6 +100,46 @@ class OrderItem(Base):
     price = Column(Float, nullable=False)
     order = relationship("Order", back_populates="items")
     product = relationship("Product", back_populates="order_items")
+
+class Coupon(Base):
+    __tablename__ = "coupons"
+    id = Column(Integer, primary_key=True)
+    code = Column(String(50), unique=True, nullable=False)
+    discount_type = Column(String(20), default="percent")  # percent | fixed
+    discount_value = Column(Float, nullable=False)
+    min_order_amount = Column(Float, default=0)
+    max_uses = Column(Integer, nullable=True)
+    used_count = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
+    expires_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class Review(Base):
+    __tablename__ = "reviews"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    rating = Column(Integer, nullable=False)
+    comment = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    user = relationship("User", back_populates="reviews")
+    product = relationship("Product", back_populates="reviews")
+
+class Wishlist(Base):
+    __tablename__ = "wishlist"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    user = relationship("User", back_populates="wishlist")
+    product = relationship("Product", back_populates="wishlist")
+
+class AdminSession(Base):
+    __tablename__ = "admin_sessions"
+    id = Column(Integer, primary_key=True)
+    token = Column(String(200), unique=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False)
 
 async def init_db():
     async with engine.begin() as conn:

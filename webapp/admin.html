@@ -5,79 +5,114 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Admin Panel</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-:root {
-  --bg: #f0f0f7; --card: #fff; --primary: #5B5BD6; --accent: #FF6B35;
-  --success: #22c55e; --danger: #ef4444; --text: #1a1a2e; --muted: #8a8a9a;
-  --border: #e8e8f0; --radius: 14px; --shadow: 0 2px 12px rgba(91,91,214,.10);
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); }
-.admin-layout { display: flex; min-height: 100vh; }
-.sidebar { width: 220px; background: var(--primary); color: #fff; padding: 24px 0; position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 100; }
-.sidebar-logo { padding: 0 20px 24px; font-size: 20px; font-weight: 900; border-bottom: 1px solid rgba(255,255,255,.15); margin-bottom: 16px; }
-.sidebar-item { padding: 12px 20px; cursor: pointer; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 10px; border-radius: 0; transition: background .15s; }
-.sidebar-item:hover, .sidebar-item.active { background: rgba(255,255,255,.15); }
-.main-area { margin-left: 220px; padding: 28px; flex: 1; }
-.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-.page-title { font-size: 22px; font-weight: 900; }
-.btn { padding: 10px 20px; border-radius: 10px; border: none; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity .15s; }
-.btn:hover { opacity: .85; }
-.btn-primary { background: var(--primary); color: #fff; }
-.btn-danger { background: var(--danger); color: #fff; }
-.btn-success { background: var(--success); color: #fff; }
-.btn-sm { padding: 6px 14px; font-size: 12px; }
-.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
-table { width: 100%; border-collapse: collapse; }
-th { background: var(--bg); font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--muted); padding: 10px 12px; text-align: left; }
-td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
-tr:last-child td { border-bottom: none; }
-.product-img-thumb { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: var(--bg); }
-.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-.badge-green { background: #d4edda; color: #155724; }
-.badge-red { background: #f8d7da; color: #721c24; }
-.badge-blue { background: #cce5ff; color: #004085; }
-.badge-yellow { background: #fff3cd; color: #856404; }
+:root{--bg:#f0f0f7;--card:#fff;--primary:#5B5BD6;--accent:#FF6B35;--success:#22c55e;--danger:#ef4444;--text:#1a1a2e;--muted:#8a8a9a;--border:#e8e8f0;--radius:14px;--shadow:0 2px 12px rgba(91,91,214,.10)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text)}
+/* Login */
+.login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#5B5BD6,#7c3aed);display:flex;align-items:center;justify-content:center;z-index:9999}
+.login-box{background:var(--card);border-radius:20px;padding:36px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.login-logo{font-size:40px;text-align:center;margin-bottom:8px}
+.login-title{font-size:22px;font-weight:900;text-align:center;margin-bottom:24px}
+.login-input{width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;background:var(--bg)}
+.login-input:focus{border-color:var(--primary)}
+.login-btn{width:100%;padding:14px;border-radius:12px;background:var(--primary);color:#fff;border:none;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
+.login-error{color:var(--danger);font-size:13px;text-align:center;margin-top:8px;min-height:20px}
+/* Layout */
+.admin-layout{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--primary);color:#fff;padding:24px 0;position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:100}
+.sidebar-logo{padding:0 20px 24px;font-size:18px;font-weight:900;border-bottom:1px solid rgba(255,255,255,.15);margin-bottom:16px}
+.sidebar-item{padding:12px 20px;cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;gap:10px;transition:background .15s}
+.sidebar-item:hover,.sidebar-item.active{background:rgba(255,255,255,.15)}
+.sidebar-logout{margin-top:auto;padding:12px 20px;cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;gap:10px;opacity:.7}
+.sidebar-logout:hover{opacity:1}
+.main-area{margin-left:220px;padding:28px;flex:1}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:gap}
+.page-title{font-size:22px;font-weight:900}
+.header-actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{padding:10px 20px;border-radius:10px;border:none;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{opacity:.85}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-warn{background:#f59e0b;color:#fff}
+.btn-sm{padding:6px 14px;font-size:12px}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
+table{width:100%;border-collapse:collapse}
+th{background:var(--bg);font-size:12px;font-weight:800;text-transform:uppercase;color:var(--muted);padding:10px 12px;text-align:left}
+td{padding:12px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.product-img-thumb{width:48px;height:48px;border-radius:8px;object-fit:cover;background:var(--bg)}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-green{background:#d4edda;color:#155724}.badge-red{background:#f8d7da;color:#721c24}
+.badge-blue{background:#cce5ff;color:#004085}.badge-yellow{background:#fff3cd;color:#856404}
 /* Modal */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
-.modal-overlay.open { display: flex; }
-.modal { background: var(--card); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
-.modal-title { font-size: 18px; font-weight: 900; margin-bottom: 20px; }
-.form-group { margin-bottom: 16px; }
-label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--muted); }
-input[type=text], input[type=number], textarea, select { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; outline: none; background: var(--bg); transition: border-color .15s; }
-input:focus, textarea:focus, select:focus { border-color: var(--primary); }
-textarea { resize: vertical; min-height: 80px; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.img-preview-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-.img-preview { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background: var(--bg); position: relative; }
-.img-preview-wrap { position: relative; }
-.img-remove { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--danger); color: #fff; border: none; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-.stat-card { background: var(--card); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
-.stat-icon { font-size: 28px; margin-bottom: 8px; }
-.stat-value { font-size: 28px; font-weight: 900; color: var(--primary); }
-.stat-label { font-size: 13px; color: var(--muted); font-weight: 600; }
-.hidden { display: none; }
-@media (max-width: 768px) {
-  .sidebar { width: 60px; }
-  .sidebar-logo, .sidebar-item span { display: none; }
-  .main-area { margin-left: 60px; padding: 16px; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border-radius:var(--radius);padding:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:18px;font-weight:900;margin-bottom:20px}
+.form-group{margin-bottom:16px}
+label{display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:var(--muted)}
+input[type=text],input[type=number],input[type=password],input[type=date],textarea,select{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;outline:none;background:var(--bg);transition:border-color .15s}
+input:focus,textarea:focus,select:focus{border-color:var(--primary)}
+textarea{resize:vertical;min-height:80px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.img-preview-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.img-preview-wrap{position:relative}
+.img-preview{width:80px;height:80px;border-radius:8px;object-fit:cover;background:var(--bg)}
+.img-remove{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.stat-icon{font-size:28px;margin-bottom:8px}
+.stat-value{font-size:28px;font-weight:900;color:var(--primary)}
+.stat-today{font-size:12px;color:var(--success);font-weight:700}
+.stat-label{font-size:13px;color:var(--muted);font-weight:600}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+/* Filters */
+.filters-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end}
+.filter-group{display:flex;flex-direction:column;gap:4px}
+.filter-group label{font-size:12px;font-weight:700;color:var(--muted)}
+.filter-input{padding:8px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;outline:none;background:var(--card)}
+.hidden{display:none}
+.broadcast-form{background:var(--bg);border-radius:12px;padding:16px;margin-bottom:16px}
+@media(max-width:768px){
+  .sidebar{width:60px}.sidebar-logo span,.sidebar-item span,.sidebar-logout span{display:none}
+  .main-area{margin-left:60px;padding:16px}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .charts-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
-<div class="admin-layout">
-  <!-- Sidebar -->
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">🔐</div>
+    <div class="login-title">Admin Panel</div>
+    <input class="login-input" type="text" id="login-user" placeholder="Login" autocomplete="username"/>
+    <input class="login-input" type="password" id="login-pass" placeholder="Parol" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" onclick="doLogin()">Kirish</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<div class="admin-layout" id="admin-layout" style="display:none">
   <aside class="sidebar">
-    <div class="sidebar-logo">⚙️ <span>Admin</span></div>
+    <div class="sidebar-logo">⚙️ <span>KategoryBot</span></div>
     <div class="sidebar-item active" onclick="showSection('dashboard')">📊 <span>Dashboard</span></div>
     <div class="sidebar-item" onclick="showSection('categories')">🗂️ <span>Kategoriyalar</span></div>
     <div class="sidebar-item" onclick="showSection('products')">📦 <span>Mahsulotlar</span></div>
     <div class="sidebar-item" onclick="showSection('orders')">📋 <span>Buyurtmalar</span></div>
+    <div class="sidebar-item" onclick="showSection('coupons')">🏷️ <span>Kuponlar</span></div>
+    <div class="sidebar-item" onclick="showSection('reviews')">⭐ <span>Izohlar</span></div>
+    <div class="sidebar-item" onclick="showSection('broadcast')">📢 <span>Broadcast</span></div>
     <div class="sidebar-item" onclick="showSection('users')">👥 <span>Foydalanuvchilar</span></div>
+    <div class="sidebar-logout" onclick="doLogout()">🚪 <span>Chiqish</span></div>
   </aside>
 
   <main class="main-area">
@@ -85,12 +120,16 @@ textarea { resize: vertical; min-height: 80px; }
     <div id="section-dashboard">
       <div class="page-header"><div class="page-title">📊 Dashboard</div></div>
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="stat-users">—</div><div class="stat-label">Foydalanuvchilar</div></div>
-        <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="stat-products">—</div><div class="stat-label">Mahsulotlar</div></div>
-        <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value" id="stat-orders">—</div><div class="stat-label">Buyurtmalar</div></div>
-        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="stat-revenue">—</div><div class="stat-label">Daromad</div></div>
+        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="s-users">—</div><div class="stat-label">Foydalanuvchilar</div></div>
+        <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="s-products">—</div><div class="stat-label">Mahsulotlar</div></div>
+        <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value" id="s-orders">—</div><div class="stat-today" id="s-today-orders"></div><div class="stat-label">Buyurtmalar</div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="s-revenue">—</div><div class="stat-today" id="s-today-rev"></div><div class="stat-label">Daromad (yetkazildi)</div></div>
       </div>
-      <div class="card"><div style="font-weight:800;margin-bottom:12px">So'nggi buyurtmalar</div><div id="recent-orders-table"></div></div>
+      <div class="charts-grid">
+        <div class="card"><canvas id="chart-orders" height="200"></canvas></div>
+        <div class="card"><canvas id="chart-revenue" height="200"></canvas></div>
+      </div>
+      <div class="card"><div style="font-weight:800;margin-bottom:12px">So'nggi buyurtmalar</div><div id="recent-orders"></div></div>
     </div>
 
     <!-- CATEGORIES -->
@@ -99,7 +138,7 @@ textarea { resize: vertical; min-height: 80px; }
         <div class="page-title">🗂️ Kategoriyalar</div>
         <button class="btn btn-primary" onclick="openCatModal()">+ Qo'shish</button>
       </div>
-      <div class="card"><table><thead><tr><th>Rasm</th><th>Nomi (UZ)</th><th>Nomi (RU)</th><th>Amallar</th></tr></thead><tbody id="categories-table"></tbody></table></div>
+      <div class="card"><table><thead><tr><th>Rasm</th><th>UZ</th><th>RU</th><th>Amallar</th></tr></thead><tbody id="cat-table"></tbody></table></div>
     </div>
 
     <!-- PRODUCTS -->
@@ -113,29 +152,82 @@ textarea { resize: vertical; min-height: 80px; }
 
     <!-- ORDERS -->
     <div id="section-orders" class="hidden">
-      <div class="page-header"><div class="page-title">📋 Buyurtmalar</div></div>
-      <div class="card"><table><thead><tr><th>#</th><th>Mijoz</th><th>Mahsulotlar</th><th>Summa</th><th>Status</th><th>Sana</th><th>Amal</th></tr></thead><tbody id="orders-table"></tbody></table></div>
+      <div class="page-header">
+        <div class="page-title">📋 Buyurtmalar</div>
+        <div class="header-actions">
+          <button class="btn btn-success" onclick="exportExcel()">📥 Excel</button>
+        </div>
+      </div>
+      <div class="filters-row">
+        <div class="filter-group"><label>Boshlanish</label><input type="date" class="filter-input" id="f-date-from"/></div>
+        <div class="filter-group"><label>Tugash</label><input type="date" class="filter-input" id="f-date-to"/></div>
+        <div class="filter-group"><label>Status</label>
+          <select class="filter-input" id="f-status">
+            <option value="">Barchasi</option>
+            <option value="pending">⏳ Kutilmoqda</option>
+            <option value="confirmed">✅ Tasdiqlandi</option>
+            <option value="delivering">🚚 Yetkazilmoqda</option>
+            <option value="delivered">📦 Yetkazildi</option>
+            <option value="cancelled">❌ Bekor</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="loadOrdersTable()" style="align-self:flex-end">Qidirish</button>
+      </div>
+      <div class="card"><table><thead><tr><th>#</th><th>Sana</th><th>Mijoz</th><th>Mahsulotlar</th><th>Yetkazish</th><th>Jami</th><th>Status</th><th>Amal</th></tr></thead><tbody id="orders-table"></tbody></table></div>
+    </div>
+
+    <!-- COUPONS -->
+    <div id="section-coupons" class="hidden">
+      <div class="page-header">
+        <div class="page-title">🏷️ Kupon kodlari</div>
+        <button class="btn btn-primary" onclick="openCouponModal()">+ Qo'shish</button>
+      </div>
+      <div class="card"><table><thead><tr><th>Kod</th><th>Tur</th><th>Miqdor</th><th>Min summa</th><th>Foydalanish</th><th>Tugash</th><th>Holat</th><th>Amal</th></tr></thead><tbody id="coupons-table"></tbody></table></div>
+    </div>
+
+    <!-- REVIEWS -->
+    <div id="section-reviews" class="hidden">
+      <div class="page-header"><div class="page-title">⭐ Mahsulot izohlari</div></div>
+      <div class="card"><table><thead><tr><th>Mahsulot</th><th>Foydalanuvchi</th><th>Baho</th><th>Izoh</th><th>Sana</th><th>Amal</th></tr></thead><tbody id="reviews-table"></tbody></table></div>
+    </div>
+
+    <!-- BROADCAST -->
+    <div id="section-broadcast" class="hidden">
+      <div class="page-header"><div class="page-title">📢 Broadcast xabar</div></div>
+      <div class="card">
+        <div class="form-group"><label>Barcha foydalanuvchilarga xabar yuborish</label>
+          <textarea id="broadcast-text" placeholder="Xabar matnini kiriting..." rows="5"></textarea>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="sendBroadcast()">📤 Yuborish</button>
+          <span id="broadcast-status" style="font-size:14px;color:var(--muted);align-self:center"></span>
+        </div>
+      </div>
     </div>
 
     <!-- USERS -->
     <div id="section-users" class="hidden">
       <div class="page-header"><div class="page-title">👥 Foydalanuvchilar</div></div>
-      <div class="card"><table><thead><tr><th>ID</th><th>Ism</th><th>Telefon</th><th>Til</th><th>Holat</th></tr></thead><tbody id="users-table"></tbody></table></div>
+      <div class="card"><table><thead><tr><th>Telegram ID</th><th>Ism</th><th>Telefon</th><th>Til</th><th>Holat</th></tr></thead><tbody id="users-table"></tbody></table></div>
     </div>
   </main>
 </div>
 
-<!-- CATEGORY MODAL -->
+<!-- CAT MODAL -->
 <div class="modal-overlay" id="cat-modal">
   <div class="modal">
     <div class="modal-title" id="cat-modal-title">Kategoriya qo'shish</div>
     <input type="hidden" id="cat-edit-id"/>
-    <div class="form-group"><label>Nomi (O'zbek)</label><input type="text" id="cat-name-uz" placeholder="Kategoriya nomi UZ"/></div>
-    <div class="form-group"><label>Nomi (Ruscha)</label><input type="text" id="cat-name-ru" placeholder="Kategoriya nomi RU"/></div>
-    <div class="form-group"><label>Rasm</label><input type="file" id="cat-image" accept="image/*" onchange="previewCatImage(this)"/><div id="cat-image-preview" class="img-preview-grid"></div></div>
+    <div class="form-row">
+      <div class="form-group"><label>Nomi (UZ)</label><input type="text" id="cat-uz"/></div>
+      <div class="form-group"><label>Nomi (RU)</label><input type="text" id="cat-ru"/></div>
+    </div>
+    <div class="form-group"><label>Rasm</label><input type="file" id="cat-img" accept="image/*" onchange="previewImg(this,'cat-img-preview')"/>
+      <div id="cat-img-preview" class="img-preview-grid"></div>
+    </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeCatModal()">Bekor</button>
-      <button class="btn btn-primary" onclick="saveCategory()">Saqlash</button>
+      <button class="btn btn-primary" onclick="saveCat()">Saqlash</button>
     </div>
   </div>
 </div>
@@ -143,27 +235,26 @@ textarea { resize: vertical; min-height: 80px; }
 <!-- PRODUCT MODAL -->
 <div class="modal-overlay" id="product-modal">
   <div class="modal">
-    <div class="modal-title" id="product-modal-title">Mahsulot qo'shish</div>
-    <input type="hidden" id="product-edit-id"/>
+    <div class="modal-title" id="prod-modal-title">Mahsulot qo'shish</div>
+    <input type="hidden" id="p-edit-id"/>
     <div class="form-row">
-      <div class="form-group"><label>Nomi (UZ)</label><input type="text" id="p-title-uz" placeholder="Mahsulot nomi UZ"/></div>
-      <div class="form-group"><label>Nomi (RU)</label><input type="text" id="p-title-ru" placeholder="Mahsulot nomi RU"/></div>
+      <div class="form-group"><label>Nomi (UZ)</label><input type="text" id="p-uz"/></div>
+      <div class="form-group"><label>Nomi (RU)</label><input type="text" id="p-ru"/></div>
     </div>
-    <div class="form-group"><label>Tavsif (UZ)</label><textarea id="p-desc-uz" placeholder="Mahsulot tavsifi..."></textarea></div>
-    <div class="form-group"><label>Tavsif (RU)</label><textarea id="p-desc-ru" placeholder="Описание товара..."></textarea></div>
+    <div class="form-group"><label>Tavsif (UZ)</label><textarea id="p-desc-uz"></textarea></div>
+    <div class="form-group"><label>Tavsif (RU)</label><textarea id="p-desc-ru"></textarea></div>
     <div class="form-row">
-      <div class="form-group"><label>Narx (so'm)</label><input type="number" id="p-price" placeholder="0"/></div>
-      <div class="form-group"><label>Eski narx (ixtiyoriy)</label><input type="number" id="p-old-price" placeholder="0"/></div>
+      <div class="form-group"><label>Narx (so'm)</label><input type="number" id="p-price"/></div>
+      <div class="form-group"><label>Eski narx</label><input type="number" id="p-old-price" placeholder="Ixtiyoriy"/></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Kategoriya</label><select id="p-category"></select></div>
-      <div class="form-group"><label>Sklad soni</label><input type="number" id="p-stock" value="100"/></div>
+      <div class="form-group"><label>Kategoriya</label><select id="p-cat"></select></div>
+      <div class="form-group"><label>Sklad</label><input type="number" id="p-stock" value="100"/></div>
     </div>
-    <div class="form-group">
-      <label>Rasmlar (max 4 ta)</label>
-      <input type="file" id="p-images" accept="image/*" multiple onchange="previewProductImages(this)"/>
-      <div id="p-images-preview" class="img-preview-grid"></div>
-      <input type="hidden" id="p-existing-images" value="[]"/>
+    <div class="form-group"><label>Rasmlar (max 4)</label>
+      <input type="file" id="p-imgs" accept="image/*" multiple onchange="previewProductImgs(this)"/>
+      <div id="p-imgs-preview" class="img-preview-grid"></div>
+      <input type="hidden" id="p-existing" value="[]"/>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeProductModal()">Bekor</button>
@@ -172,240 +263,361 @@ textarea { resize: vertical; min-height: 80px; }
   </div>
 </div>
 
-<script>
-const API = '..';
-let allCategories = [];
-let editingCatId = null;
-let editingProductId = null;
-let newProductImages = [];
-let existingProductImages = [];
+<!-- COUPON MODAL -->
+<div class="modal-overlay" id="coupon-modal">
+  <div class="modal">
+    <div class="modal-title" id="coupon-modal-title">Kupon qo'shish</div>
+    <input type="hidden" id="coup-edit-id"/>
+    <div class="form-group"><label>Kod</label><input type="text" id="coup-code" placeholder="SALE20" style="text-transform:uppercase"/></div>
+    <div class="form-row">
+      <div class="form-group"><label>Tur</label>
+        <select id="coup-type"><option value="percent">Foiz (%)</option><option value="fixed">Belgilangan (so'm)</option></select>
+      </div>
+      <div class="form-group"><label>Miqdor</label><input type="number" id="coup-value" placeholder="20"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Min buyurtma (so'm)</label><input type="number" id="coup-min" value="0"/></div>
+      <div class="form-group"><label>Max foydalanish</label><input type="number" id="coup-max" placeholder="Cheksiz"/></div>
+    </div>
+    <div class="form-group"><label>Tugash sanasi</label><input type="date" id="coup-expires"/></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="document.getElementById('coupon-modal').classList.remove('open')">Bekor</button>
+      <button class="btn btn-primary" onclick="saveCoupon()">Saqlash</button>
+    </div>
+  </div>
+</div>
 
-async function init() {
+<script>
+const API='';
+let token=localStorage.getItem('admin_token')||'';
+let allCats=[],editCatId=null,editProdId=null,editCoupId=null;
+let newProdImgs=[],existingProdImgs=[];
+let ordersChart=null,revenueChart=null;
+
+async function authFetch(url,opts={}){
+  opts.headers={...(opts.headers||{}),Authorization:`Bearer ${token}`};
+  const r=await fetch(url,opts);
+  if(r.status===401){doLogout();return null;}
+  return r;
+}
+
+async function doLogin(){
+  const u=document.getElementById('login-user').value;
+  const p=document.getElementById('login-pass').value;
+  const r=await fetch(`${API}/api/admin/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+  if(r.ok){
+    const d=await r.json();token=d.token;
+    localStorage.setItem('admin_token',token);
+    showAdmin();
+  }else{document.getElementById('login-error').textContent='❌ Noto\'g\'ri login yoki parol';}
+}
+
+async function checkToken(){
+  if(!token)return false;
+  const r=await authFetch(`${API}/api/admin/check`);
+  return r&&r.ok;
+}
+
+async function doLogout(){
+  if(token)await authFetch(`${API}/api/admin/logout`,{method:'POST'});
+  token='';localStorage.removeItem('admin_token');
+  document.getElementById('admin-layout').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+}
+
+async function showAdmin(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('admin-layout').style.display='flex';
   await loadDashboard();
 }
 
-function showSection(name) {
-  ['dashboard','categories','products','orders','users'].forEach(s => {
-    document.getElementById(`section-${s}`).className = s === name ? '' : 'hidden';
-  });
-  document.querySelectorAll('.sidebar-item').forEach((el,i) => {
-    el.className = 'sidebar-item' + (['dashboard','categories','products','orders','users'][i] === name ? ' active' : '');
-  });
-  if (name === 'categories') loadCategoriesTable();
-  if (name === 'products') loadProductsTable();
-  if (name === 'orders') loadOrdersTable();
-  if (name === 'users') loadUsersTable();
+async function init(){
+  if(token&&await checkToken())showAdmin();
+  else{token='';localStorage.removeItem('admin_token');}
 }
 
-async function loadDashboard() {
-  const [users, products, orders] = await Promise.all([
-    fetch(`${API}/api/admin/users`).then(r=>r.json()),
-    fetch(`${API}/api/products/all`).then(r=>r.json()),
-    fetch(`${API}/api/admin/orders`).then(r=>r.json()),
-  ]);
-  document.getElementById('stat-users').textContent = users.length;
-  document.getElementById('stat-products').textContent = products.length;
-  document.getElementById('stat-orders').textContent = orders.length;
-  const revenue = orders.filter(o=>o.status==='delivered').reduce((s,o)=>s+o.total_price,0);
-  document.getElementById('stat-revenue').textContent = revenue.toLocaleString();
-  const recent = orders.slice(0,5);
-  document.getElementById('recent-orders-table').innerHTML = `<table><thead><tr><th>#</th><th>Mijoz</th><th>Summa</th><th>Status</th></tr></thead><tbody>${recent.map(o=>`<tr><td>#${o.id}</td><td>${o.user?.full_name||'—'}</td><td>${o.total_price.toLocaleString()} so'm</td><td><span class="badge badge-${statusColor(o.status)}">${statusText(o.status)}</span></td></tr>`).join('')}</tbody></table>`;
+function showSection(name){
+  ['dashboard','categories','products','orders','coupons','reviews','broadcast','users'].forEach(s=>{
+    document.getElementById(`section-${s}`).className=s===name?'':'hidden';
+  });
+  document.querySelectorAll('.sidebar-item').forEach((el,i)=>{
+    el.className='sidebar-item'+((['dashboard','categories','products','orders','coupons','reviews','broadcast','users'][i]===name)?'  active':'');
+  });
+  if(name==='categories')loadCatsTable();
+  if(name==='products')loadProductsTable();
+  if(name==='orders')loadOrdersTable();
+  if(name==='coupons')loadCouponsTable();
+  if(name==='reviews')loadReviewsTable();
+  if(name==='users')loadUsersTable();
 }
 
-// ── CATEGORIES ──
-async function loadCategoriesTable() {
-  const cats = await fetch(`${API}/api/categories/all`).then(r=>r.json());
-  allCategories = cats;
-  document.getElementById('categories-table').innerHTML = cats.map(c => `
+// DASHBOARD
+async function loadDashboard(){
+  const r=await authFetch(`${API}/api/admin/stats`);
+  if(!r)return;const s=await r.json();
+  document.getElementById('s-users').textContent=s.users;
+  document.getElementById('s-products').textContent=s.products;
+  document.getElementById('s-orders').textContent=s.orders;
+  document.getElementById('s-revenue').textContent=Number(s.revenue).toLocaleString();
+  document.getElementById('s-today-orders').textContent=`Bugun: ${s.today_orders}`;
+  document.getElementById('s-today-rev').textContent=`Bugun: ${Number(s.today_revenue).toLocaleString()}`;
+  const labels=s.daily.map(d=>d.date.slice(5));
+  const ordersData=s.daily.map(d=>d.orders);
+  const revenueData=s.daily.map(d=>d.revenue);
+  if(ordersChart)ordersChart.destroy();
+  if(revenueChart)revenueChart.destroy();
+  ordersChart=new Chart(document.getElementById('chart-orders'),{
+    type:'bar',data:{labels,datasets:[{label:'Buyurtmalar',data:ordersData,backgroundColor:'rgba(91,91,214,.7)',borderRadius:6}]},
+    options:{plugins:{legend:{display:false},title:{display:true,text:'Oxirgi 7 kun buyurtmalari'}},scales:{y:{beginAtZero:true}}}
+  });
+  revenueChart=new Chart(document.getElementById('chart-revenue'),{
+    type:'line',data:{labels,datasets:[{label:'Daromad',data:revenueData,borderColor:'#5B5BD6',backgroundColor:'rgba(91,91,214,.1)',fill:true,tension:.4}]},
+    options:{plugins:{legend:{display:false},title:{display:true,text:'Oxirgi 7 kun daromad'}},scales:{y:{beginAtZero:true}}}
+  });
+  const or=await authFetch(`${API}/api/admin/orders`);
+  if(!or)return;const orders=(await or.json()).slice(0,5);
+  document.getElementById('recent-orders').innerHTML=`<table><thead><tr><th>#</th><th>Mijoz</th><th>Jami</th><th>Status</th><th>Sana</th></tr></thead><tbody>
+    ${orders.map(o=>`<tr><td>#${o.id}</td><td>${o.user?.full_name||'—'}</td><td>${Number(o.total_final).toLocaleString()} so'm</td><td><span class="badge badge-${sc(o.status)}">${st(o.status)}</span></td><td>${new Date(o.created_at).toLocaleDateString()}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+// CATEGORIES
+async function loadCatsTable(){
+  const r=await authFetch(`${API}/api/categories/all`);if(!r)return;
+  allCats=await r.json();
+  document.getElementById('cat-table').innerHTML=allCats.map(c=>`
     <tr>
-      <td>${c.image_url ? `<img class="product-img-thumb" src="${API}${c.image_url}"/>` : '—'}</td>
-      <td><strong>${c.name_uz}</strong></td>
-      <td>${c.name_ru}</td>
+      <td>${c.image_url?`<img class="product-img-thumb" src="${c.image_url}"/>`:'—'}</td>
+      <td><strong>${c.name_uz}</strong></td><td>${c.name_ru}</td>
       <td>
-        <button class="btn btn-sm btn-primary" onclick="openCatModal(${JSON.stringify(c).replace(/"/g,'&quot;')})">✏️</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteCat(${c.id})" style="margin-left:6px">🗑️</button>
+        <button class="btn btn-sm btn-primary" onclick='openCatModal(${JSON.stringify(c).replace(/"/g,"&quot;")})'>✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="delCat(${c.id})" style="margin-left:4px">🗑️</button>
       </td>
     </tr>`).join('');
 }
-
-function openCatModal(cat=null) {
-  editingCatId = cat ? cat.id : null;
-  document.getElementById('cat-modal-title').textContent = cat ? 'Kategoriya tahrirlash' : 'Kategoriya qo\'shish';
-  document.getElementById('cat-edit-id').value = cat ? cat.id : '';
-  document.getElementById('cat-name-uz').value = cat ? cat.name_uz : '';
-  document.getElementById('cat-name-ru').value = cat ? cat.name_ru : '';
-  document.getElementById('cat-image-preview').innerHTML = cat && cat.image_url ? `<div class="img-preview-wrap"><img class="img-preview" src="${API}${cat.image_url}"/></div>` : '';
+function openCatModal(c=null){
+  editCatId=c?c.id:null;
+  document.getElementById('cat-modal-title').textContent=c?'Tahrirlash':'Qo\'shish';
+  document.getElementById('cat-edit-id').value=c?c.id:'';
+  document.getElementById('cat-uz').value=c?c.name_uz:'';
+  document.getElementById('cat-ru').value=c?c.name_ru:'';
+  document.getElementById('cat-img-preview').innerHTML=c&&c.image_url?`<div class="img-preview-wrap"><img class="img-preview" src="${c.image_url}"/></div>`:'';
   document.getElementById('cat-modal').classList.add('open');
 }
-function closeCatModal() { document.getElementById('cat-modal').classList.remove('open'); }
-
-function previewCatImage(input) {
-  const preview = document.getElementById('cat-image-preview');
-  if (input.files[0]) {
-    const url = URL.createObjectURL(input.files[0]);
-    preview.innerHTML = `<div class="img-preview-wrap"><img class="img-preview" src="${url}"/></div>`;
-  }
+function closeCatModal(){document.getElementById('cat-modal').classList.remove('open')}
+function previewImg(input,previewId){
+  if(input.files[0])document.getElementById(previewId).innerHTML=`<div class="img-preview-wrap"><img class="img-preview" src="${URL.createObjectURL(input.files[0])}"/></div>`;
 }
-
-async function saveCategory() {
-  const fd = new FormData();
-  fd.append('name_uz', document.getElementById('cat-name-uz').value);
-  fd.append('name_ru', document.getElementById('cat-name-ru').value);
-  const img = document.getElementById('cat-image').files[0];
-  if (img) fd.append('image', img);
-  if (editingCatId) {
-    await fetch(`${API}/api/categories/${editingCatId}`, { method: 'PUT', body: fd });
-  } else {
-    await fetch(`${API}/api/categories`, { method: 'POST', body: fd });
-  }
-  closeCatModal();
-  loadCategoriesTable();
+async function saveCat(){
+  const fd=new FormData();
+  fd.append('name_uz',document.getElementById('cat-uz').value);
+  fd.append('name_ru',document.getElementById('cat-ru').value);
+  const img=document.getElementById('cat-img').files[0];
+  if(img)fd.append('image',img);
+  const url=editCatId?`${API}/api/categories/${editCatId}`:`${API}/api/categories`;
+  const method=editCatId?'PUT':'POST';
+  await authFetch(url,{method,body:fd});
+  closeCatModal();loadCatsTable();
 }
+async function delCat(id){if(!confirm('O\'chirasizmi?'))return;await authFetch(`${API}/api/categories/${id}`,{method:'DELETE'});loadCatsTable();}
 
-async function deleteCat(id) {
-  if (!confirm('Haqiqatan o\'chirmoqchimisiz?')) return;
-  await fetch(`${API}/api/categories/${id}`, { method: 'DELETE' });
-  loadCategoriesTable();
-}
-
-// ── PRODUCTS ──
-async function loadProductsTable() {
-  if (!allCategories.length) allCategories = await fetch(`${API}/api/categories/all`).then(r=>r.json());
-  const products = await fetch(`${API}/api/products/all`).then(r=>r.json());
-  document.getElementById('products-table').innerHTML = products.map(p => {
-    const cat = allCategories.find(c=>c.id===p.category_id);
-    return `<tr>
-      <td>${p.images && p.images[0] ? `<img class="product-img-thumb" src="${API}${p.images[0]}"/>` : '—'}</td>
+// PRODUCTS
+async function loadProductsTable(){
+  if(!allCats.length){const r=await authFetch(`${API}/api/categories/all`);allCats=await r.json();}
+  const r=await authFetch(`${API}/api/products/all`);if(!r)return;
+  const products=await r.json();
+  document.getElementById('products-table').innerHTML=products.map(p=>{
+    const cat=allCats.find(c=>c.id===p.category_id);
+    return`<tr>
+      <td>${p.images&&p.images[0]?`<img class="product-img-thumb" src="${p.images[0]}"/>`:'—'}</td>
       <td><strong>${p.title_uz}</strong></td>
-      <td>${cat ? cat.name_uz : '—'}</td>
-      <td>${p.price.toLocaleString()} so'm</td>
+      <td>${cat?cat.name_uz:'—'}</td>
+      <td>${Number(p.price).toLocaleString()} so'm</td>
       <td>${p.stock}</td>
       <td>
-        <button class="btn btn-sm btn-primary" onclick='openProductModal(${JSON.stringify(p)})'>✏️</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})" style="margin-left:6px">🗑️</button>
+        <button class="btn btn-sm btn-primary" onclick='openProductModal(${JSON.stringify(p).replace(/"/g,"&quot;")})'>✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="delProduct(${p.id})" style="margin-left:4px">🗑️</button>
       </td>
     </tr>`;
   }).join('');
 }
-
-async function openProductModal(product=null) {
-  editingProductId = product ? product.id : null;
-  newProductImages = [];
-  existingProductImages = product ? (product.images || []) : [];
-  if (!allCategories.length) allCategories = await fetch(`${API}/api/categories/all`).then(r=>r.json());
-  document.getElementById('product-modal-title').textContent = product ? 'Mahsulot tahrirlash' : 'Mahsulot qo\'shish';
-  document.getElementById('p-title-uz').value = product ? product.title_uz : '';
-  document.getElementById('p-title-ru').value = product ? product.title_ru : '';
-  document.getElementById('p-desc-uz').value = product ? (product.description_uz||'') : '';
-  document.getElementById('p-desc-ru').value = product ? (product.description_ru||'') : '';
-  document.getElementById('p-price').value = product ? product.price : '';
-  document.getElementById('p-old-price').value = product ? (product.old_price||'') : '';
-  document.getElementById('p-stock').value = product ? product.stock : 100;
-  document.getElementById('p-category').innerHTML = allCategories.map(c => `<option value="${c.id}" ${product && product.category_id===c.id?'selected':''}>${c.name_uz}</option>`).join('');
-  renderProductImagePreviews();
-  document.getElementById('p-images').value = '';
+async function openProductModal(p=null){
+  editProdId=p?p.id:null;newProdImgs=[];existingProdImgs=p?(p.images||[]):[];
+  if(!allCats.length){const r=await authFetch(`${API}/api/categories/all`);allCats=await r.json();}
+  document.getElementById('prod-modal-title').textContent=p?'Tahrirlash':'Qo\'shish';
+  document.getElementById('p-edit-id').value=p?p.id:'';
+  document.getElementById('p-uz').value=p?p.title_uz:'';
+  document.getElementById('p-ru').value=p?p.title_ru:'';
+  document.getElementById('p-desc-uz').value=p?p.description_uz||'':'';
+  document.getElementById('p-desc-ru').value=p?p.description_ru||'':'';
+  document.getElementById('p-price').value=p?p.price:'';
+  document.getElementById('p-old-price').value=p?p.old_price||'':'';
+  document.getElementById('p-stock').value=p?p.stock:100;
+  document.getElementById('p-cat').innerHTML=allCats.map(c=>`<option value="${c.id}"${p&&p.category_id===c.id?' selected':''}>${c.name_uz}</option>`).join('');
+  renderProdImgPreview();
+  document.getElementById('p-imgs').value='';
   document.getElementById('product-modal').classList.add('open');
 }
-function closeProductModal() { document.getElementById('product-modal').classList.remove('open'); }
-
-function previewProductImages(input) {
-  for (const file of input.files) {
-    if (existingProductImages.length + newProductImages.length < 4) {
-      newProductImages.push(file);
-    }
-  }
-  renderProductImagePreviews();
+function closeProductModal(){document.getElementById('product-modal').classList.remove('open')}
+function previewProductImgs(input){
+  for(const f of input.files){if(existingProdImgs.length+newProdImgs.length<4)newProdImgs.push(f);}
+  renderProdImgPreview();
 }
-
-function renderProductImagePreviews() {
-  const container = document.getElementById('p-images-preview');
-  let html = existingProductImages.map((url,i) => `
-    <div class="img-preview-wrap">
-      <img class="img-preview" src="${API}${url}"/>
-      <button class="img-remove" onclick="removeExistingImg(${i})">×</button>
-    </div>`).join('');
-  html += newProductImages.map((f,i) => `
-    <div class="img-preview-wrap">
-      <img class="img-preview" src="${URL.createObjectURL(f)}"/>
-      <button class="img-remove" onclick="removeNewImg(${i})">×</button>
-    </div>`).join('');
-  container.innerHTML = html;
-  document.getElementById('p-existing-images').value = JSON.stringify(existingProductImages);
+function renderProdImgPreview(){
+  let html=existingProdImgs.map((url,i)=>`<div class="img-preview-wrap"><img class="img-preview" src="${url}"/><button class="img-remove" onclick="existingProdImgs.splice(${i},1);renderProdImgPreview()">×</button></div>`).join('');
+  html+=newProdImgs.map((f,i)=>`<div class="img-preview-wrap"><img class="img-preview" src="${URL.createObjectURL(f)}"/><button class="img-remove" onclick="newProdImgs.splice(${i},1);renderProdImgPreview()">×</button></div>`).join('');
+  document.getElementById('p-imgs-preview').innerHTML=html;
+  document.getElementById('p-existing').value=JSON.stringify(existingProdImgs);
 }
-
-function removeExistingImg(i) { existingProductImages.splice(i,1); renderProductImagePreviews(); }
-function removeNewImg(i) { newProductImages.splice(i,1); renderProductImagePreviews(); }
-
-async function saveProduct() {
-  const fd = new FormData();
-  fd.append('title_uz', document.getElementById('p-title-uz').value);
-  fd.append('title_ru', document.getElementById('p-title-ru').value);
-  fd.append('description_uz', document.getElementById('p-desc-uz').value);
-  fd.append('description_ru', document.getElementById('p-desc-ru').value);
-  fd.append('price', document.getElementById('p-price').value);
-  const oldPrice = document.getElementById('p-old-price').value;
-  if (oldPrice) fd.append('old_price', oldPrice);
-  fd.append('category_id', document.getElementById('p-category').value);
-  fd.append('stock', document.getElementById('p-stock').value);
-  fd.append('existing_images', JSON.stringify(existingProductImages));
-  for (const f of newProductImages) fd.append('images', f);
-  if (editingProductId) {
-    await fetch(`${API}/api/products/${editingProductId}`, { method: 'PUT', body: fd });
-  } else {
-    await fetch(`${API}/api/products`, { method: 'POST', body: fd });
-  }
-  closeProductModal();
-  loadProductsTable();
+async function saveProduct(){
+  const fd=new FormData();
+  fd.append('title_uz',document.getElementById('p-uz').value);
+  fd.append('title_ru',document.getElementById('p-ru').value);
+  fd.append('description_uz',document.getElementById('p-desc-uz').value);
+  fd.append('description_ru',document.getElementById('p-desc-ru').value);
+  fd.append('price',document.getElementById('p-price').value);
+  const op=document.getElementById('p-old-price').value;if(op)fd.append('old_price',op);
+  fd.append('category_id',document.getElementById('p-cat').value);
+  fd.append('stock',document.getElementById('p-stock').value);
+  fd.append('existing_images',JSON.stringify(existingProdImgs));
+  for(const f of newProdImgs)fd.append('images',f);
+  const url=editProdId?`${API}/api/products/${editProdId}`:`${API}/api/products`;
+  await authFetch(url,{method:editProdId?'PUT':'POST',body:fd});
+  closeProductModal();loadProductsTable();
 }
+async function delProduct(id){if(!confirm('O\'chirasizmi?'))return;await authFetch(`${API}/api/products/${id}`,{method:'DELETE'});loadProductsTable();}
 
-async function deleteProduct(id) {
-  if (!confirm('Mahsulotni o\'chirmoqchimisiz?')) return;
-  await fetch(`${API}/api/products/${id}`, { method: 'DELETE' });
-  loadProductsTable();
-}
-
-// ── ORDERS ──
-async function loadOrdersTable() {
-  const orders = await fetch(`${API}/api/admin/orders`).then(r=>r.json());
-  document.getElementById('orders-table').innerHTML = orders.map(o => `
+// ORDERS
+async function loadOrdersTable(){
+  const df=document.getElementById('f-date-from').value;
+  const dt=document.getElementById('f-date-to').value;
+  const st=document.getElementById('f-status').value;
+  let url=`${API}/api/admin/orders?`;
+  if(df)url+=`date_from=${df}&`;if(dt)url+=`date_to=${dt}&`;if(st)url+=`status=${st}&`;
+  const r=await authFetch(url);if(!r)return;
+  const orders=await r.json();
+  document.getElementById('orders-table').innerHTML=orders.map(o=>`
     <tr>
       <td>#${o.id}</td>
+      <td style="font-size:12px">${new Date(o.created_at).toLocaleDateString()}<br>${new Date(o.created_at).toLocaleTimeString()}</td>
       <td>${o.user?.full_name||'—'}<br><small style="color:var(--muted)">${o.user?.phone||''}</small></td>
-      <td style="max-width:200px;font-size:12px">${o.items.map(i=>`${i.product_title} x${i.quantity}`).join(', ')}</td>
-      <td>${o.total_price.toLocaleString()} so'm</td>
-      <td><span class="badge badge-${statusColor(o.status)}">${statusText(o.status)}</span></td>
-      <td style="font-size:12px">${new Date(o.created_at).toLocaleDateString()}</td>
+      <td style="max-width:180px;font-size:12px">${o.items.map(i=>`${i.product_title} x${i.quantity}`).join(', ')}</td>
+      <td style="font-size:12px">${o.delivery_price>0?Number(o.delivery_price).toLocaleString()+' so\'m':'Bepul'}</td>
+      <td><strong>${Number(o.total_final).toLocaleString()} so'm</strong>${o.coupon_code?`<br><small style="color:var(--success)">🏷️ ${o.coupon_code}</small>`:''}</td>
+      <td><span class="badge badge-${sc(o.status)}">${st2(o.status)}</span></td>
       <td>
-        <select onchange="changeOrderStatus(${o.id}, this.value)" style="padding:4px 8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:12px">
-          ${['pending','confirmed','delivering','delivered','cancelled'].map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${statusText(s)}</option>`).join('')}
+        <select onchange="changeStatus(${o.id},this.value)" style="padding:4px 8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:12px">
+          ${['pending','confirmed','delivering','delivered','cancelled'].map(s=>`<option value="${s}"${o.status===s?' selected':''}>${st2(s)}</option>`).join('')}
         </select>
       </td>
     </tr>`).join('');
 }
-
-async function changeOrderStatus(id, status) {
-  await fetch(`${API}/api/admin/orders/${id}/status?status=${status}`, { method: 'PUT' });
+async function changeStatus(id,status){await authFetch(`${API}/api/admin/orders/${id}/status?status=${status}`,{method:'PUT'});}
+async function exportExcel(){
+  const df=document.getElementById('f-date-from').value;
+  const dt=document.getElementById('f-date-to').value;
+  const st=document.getElementById('f-status').value;
+  let url=`${API}/api/admin/orders/export/excel?`;
+  if(df)url+=`date_from=${df}&`;if(dt)url+=`date_to=${dt}&`;if(st)url+=`status=${st}&`;
+  const r=await authFetch(url);
+  if(!r||!r.ok){alert('Excel export xatosi!');return;}
+  const blob=await r.blob();
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`orders_${df||'all'}_${dt||'all'}.xlsx`;
+  a.click();
 }
 
-// ── USERS ──
-async function loadUsersTable() {
-  const users = await fetch(`${API}/api/admin/users`).then(r=>r.json());
-  document.getElementById('users-table').innerHTML = users.map(u => `
+// COUPONS
+async function loadCouponsTable(){
+  const r=await authFetch(`${API}/api/admin/coupons`);if(!r)return;
+  const coupons=await r.json();
+  document.getElementById('coupons-table').innerHTML=coupons.map(c=>`
+    <tr>
+      <td><strong>${c.code}</strong></td>
+      <td>${c.discount_type==='percent'?'Foiz':'Belgilangan'}</td>
+      <td>${c.discount_type==='percent'?c.discount_value+'%':Number(c.discount_value).toLocaleString()+' so\'m'}</td>
+      <td>${Number(c.min_order_amount).toLocaleString()} so'm</td>
+      <td>${c.used_count}${c.max_uses?'/'+c.max_uses:'/∞'}</td>
+      <td style="font-size:12px">${c.expires_at?new Date(c.expires_at).toLocaleDateString():'—'}</td>
+      <td><span class="badge ${c.is_active?'badge-green':'badge-red'}">${c.is_active?'Faol':'Nofaol'}</span></td>
+      <td>
+        <button class="btn btn-sm btn-warn" onclick="toggleCoupon(${c.id},${!c.is_active})">${c.is_active?'⏸':'▶'}</button>
+        <button class="btn btn-sm btn-danger" onclick="delCoupon(${c.id})" style="margin-left:4px">🗑️</button>
+      </td>
+    </tr>`).join('');
+}
+function openCouponModal(){
+  editCoupId=null;
+  document.getElementById('coupon-modal-title').textContent='Kupon qo\'shish';
+  ['coup-code','coup-value','coup-min','coup-max','coup-expires'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('coup-min').value='0';
+  document.getElementById('coupon-modal').classList.add('open');
+}
+async function saveCoupon(){
+  const data={
+    code:document.getElementById('coup-code').value,
+    discount_type:document.getElementById('coup-type').value,
+    discount_value:parseFloat(document.getElementById('coup-value').value),
+    min_order_amount:parseFloat(document.getElementById('coup-min').value)||0,
+    max_uses:document.getElementById('coup-max').value?parseInt(document.getElementById('coup-max').value):null,
+    expires_at:document.getElementById('coup-expires').value||null,
+  };
+  await authFetch(`${API}/api/admin/coupons`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  document.getElementById('coupon-modal').classList.remove('open');loadCouponsTable();
+}
+async function toggleCoupon(id,active){await authFetch(`${API}/api/admin/coupons/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:'',discount_type:'percent',discount_value:0,is_active:active})});loadCouponsTable();}
+async function delCoupon(id){if(!confirm('O\'chirasizmi?'))return;await authFetch(`${API}/api/admin/coupons/${id}`,{method:'DELETE'});loadCouponsTable();}
+
+// REVIEWS
+async function loadReviewsTable(){
+  const r=await authFetch(`${API}/api/admin/reviews`);if(!r)return;
+  const reviews=await r.json();
+  document.getElementById('reviews-table').innerHTML=reviews.map(rv=>`
+    <tr>
+      <td><strong>${rv.product_title}</strong></td>
+      <td>${rv.user_name}</td>
+      <td>${'⭐'.repeat(rv.rating)}</td>
+      <td style="max-width:200px;font-size:13px">${rv.comment||'—'}</td>
+      <td style="font-size:12px">${new Date(rv.created_at).toLocaleDateString()}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="delReview(${rv.id})">🗑️</button></td>
+    </tr>`).join('');
+}
+async function delReview(id){if(!confirm('O\'chirasizmi?'))return;await authFetch(`${API}/api/admin/reviews/${id}`,{method:'DELETE'});loadReviewsTable();}
+
+// BROADCAST (API orqali emas, bot handler orqali)
+async function sendBroadcast(){
+  const text=document.getElementById('broadcast-text').value.trim();
+  if(!text){alert('Xabar kiriting!');return;}
+  const status=document.getElementById('broadcast-status');
+  status.textContent='⏳ Yuborilmoqda...';
+  // Bu yerda bot API ga webhook yuboriladi
+  // Haqiqiy broadcast bot/handlers.py da /broadcast buyrug'i orqali amalga oshiriladi
+  // Admin paneldan faqat matn xabar uchun oddiy HTTP endpoint
+  try{
+    const r=await authFetch(`${API}/api/admin/broadcast`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    if(r&&r.ok){const d=await r.json();status.textContent=`✅ ${d.sent} ta yuborildi, ${d.failed} ta xato`;}
+    else status.textContent='❌ Xato yuz berdi';
+  }catch{status.textContent='❌ Xato yuz berdi';}
+}
+
+// USERS
+async function loadUsersTable(){
+  const r=await authFetch(`${API}/api/admin/users`);if(!r)return;
+  const users=await r.json();
+  document.getElementById('users-table').innerHTML=users.map(u=>`
     <tr>
       <td>${u.telegram_id}</td>
       <td>${u.full_name||'—'}</td>
       <td>${u.phone||'—'}</td>
       <td>${u.language||'uz'}</td>
-      <td><span class="badge ${u.is_verified?'badge-green':'badge-yellow'}">${u.is_verified?'✅ Tasdiqlangan':'⏳ Tasdiqlanmagan'}</span></td>
+      <td><span class="badge ${u.is_verified?'badge-green':'badge-yellow'}">${u.is_verified?'✅ Tasdiqlangan':'⏳ Kutilmoqda'}</span></td>
     </tr>`).join('');
 }
 
-function statusText(s) {
-  return {pending:'⏳ Kutilmoqda',confirmed:'✅ Tasdiqlandi',delivering:'🚚 Yetkazilmoqda',delivered:'📦 Yetkazildi',cancelled:'❌ Bekor'}[s]||s;
-}
-function statusColor(s) {
-  return {pending:'yellow',confirmed:'blue',delivering:'blue',delivered:'green',cancelled:'red'}[s]||'blue';
-}
+function st(s){return{pending:'⏳ Kutilmoqda',confirmed:'✅ Tasdiqlandi',delivering:'🚚 Yetkazilmoqda',delivered:'📦 Yetkazildi',cancelled:'❌ Bekor'}[s]||s}
+function st2(s){return st(s)}
+function sc(s){return{pending:'yellow',confirmed:'blue',delivering:'blue',delivered:'green',cancelled:'red'}[s]||'blue'}
 
 init();
 </script>
