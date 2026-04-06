@@ -1,0 +1,27 @@
+# kategorybot.service
+# /etc/systemd/system/kategorybot.service
+#
+# O'rnatish:
+#   sudo cp kategorybot.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable kategorybot
+#   sudo systemctl start kategorybot
+#   sudo systemctl status kategorybot
+
+[Unit]
+Description=KategoryBot — Telegram WebApp Shop
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/kategorybot
+EnvironmentFile=/var/www/kategorybot/.env
+ExecStart=/usr/bin/python3 run.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
