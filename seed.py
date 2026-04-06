@@ -3,9 +3,6 @@ seed.py — Demo ma'lumotlar qo'shish skripti
 Ishlatish: python seed.py
 """
 import asyncio
-import sys, os
-sys.path.insert(0, os.path.dirname(__file__))
-
 from database.db import init_db
 from database.crud import create_category, create_product, get_categories
 

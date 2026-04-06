@@ -1,0 +1,12 @@
+.git
+.idea
+.pytest_cache
+.ruff_cache
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+shop.db
+uploads

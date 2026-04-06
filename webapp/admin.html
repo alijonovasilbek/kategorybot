@@ -112,6 +112,7 @@ textarea{resize:vertical;min-height:80px}
     <div class="sidebar-item" onclick="showSection('reviews')">⭐ <span>Izohlar</span></div>
     <div class="sidebar-item" onclick="showSection('broadcast')">📢 <span>Broadcast</span></div>
     <div class="sidebar-item" onclick="showSection('users')">👥 <span>Foydalanuvchilar</span></div>
+    <div class="sidebar-item" onclick="showSection('settings')">⚙️ <span>Sozlamalar</span></div>
     <div class="sidebar-logout" onclick="doLogout()">🚪 <span>Chiqish</span></div>
   </aside>
 
@@ -210,6 +211,30 @@ textarea{resize:vertical;min-height:80px}
       <div class="page-header"><div class="page-title">👥 Foydalanuvchilar</div></div>
       <div class="card"><table><thead><tr><th>Telegram ID</th><th>Ism</th><th>Telefon</th><th>Til</th><th>Holat</th></tr></thead><tbody id="users-table"></tbody></table></div>
     </div>
+
+    <!-- SETTINGS -->
+    <div id="section-settings" class="hidden">
+      <div class="page-header"><div class="page-title">⚙️ Do'kon sozlamalari</div></div>
+      <div class="card">
+        <div class="form-row">
+          <div class="form-group"><label>Do'kon nomi (UZ)</label><input type="text" id="set-shop-name-uz"/></div>
+          <div class="form-group"><label>Do'kon nomi (RU)</label><input type="text" id="set-shop-name-ru"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Bo'lim sarlavhasi (UZ)</label><input type="text" id="set-all-title-uz"/></div>
+          <div class="form-group"><label>Bo'lim sarlavhasi (RU)</label><input type="text" id="set-all-title-ru"/></div>
+        </div>
+        <div class="form-group">
+          <label>Logo</label>
+          <input type="file" id="set-logo" accept="image/*" onchange="previewImg(this,'set-logo-preview')"/>
+          <div id="set-logo-preview" class="img-preview-grid"></div>
+        </div>
+        <div class="modal-footer" style="justify-content:flex-start">
+          <button class="btn btn-primary" onclick="saveSettings()">Saqlash</button>
+          <span id="settings-status" style="font-size:13px;color:var(--muted);align-self:center"></span>
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -290,7 +315,7 @@ textarea{resize:vertical;min-height:80px}
 <script>
 const API='';
 let token=localStorage.getItem('admin_token')||'';
-let allCats=[],editCatId=null,editProdId=null,editCoupId=null;
+let allCats=[],allProducts=[],editCatId=null,editProdId=null,editCoupId=null;
 let newProdImgs=[],existingProdImgs=[];
 let ordersChart=null,revenueChart=null;
 
@@ -337,11 +362,11 @@ async function init(){
 }
 
 function showSection(name){
-  ['dashboard','categories','products','orders','coupons','reviews','broadcast','users'].forEach(s=>{
+  ['dashboard','categories','products','orders','coupons','reviews','broadcast','users','settings'].forEach(s=>{
     document.getElementById(`section-${s}`).className=s===name?'':'hidden';
   });
   document.querySelectorAll('.sidebar-item').forEach((el,i)=>{
-    el.className='sidebar-item'+((['dashboard','categories','products','orders','coupons','reviews','broadcast','users'][i]===name)?'  active':'');
+    el.className='sidebar-item'+((['dashboard','categories','products','orders','coupons','reviews','broadcast','users','settings'][i]===name)?'  active':'');
   });
   if(name==='categories')loadCatsTable();
   if(name==='products')loadProductsTable();
@@ -349,6 +374,7 @@ function showSection(name){
   if(name==='coupons')loadCouponsTable();
   if(name==='reviews')loadReviewsTable();
   if(name==='users')loadUsersTable();
+  if(name==='settings')loadSettings();
 }
 
 // DASHBOARD
@@ -390,10 +416,14 @@ async function loadCatsTable(){
       <td>${c.image_url?`<img class="product-img-thumb" src="${c.image_url}"/>`:'—'}</td>
       <td><strong>${c.name_uz}</strong></td><td>${c.name_ru}</td>
       <td>
-        <button class="btn btn-sm btn-primary" onclick='openCatModal(${JSON.stringify(c).replace(/"/g,"&quot;")})'>✏️</button>
+        <button class="btn btn-sm btn-primary" onclick="openCatModalById(${c.id})">✏️</button>
         <button class="btn btn-sm btn-danger" onclick="delCat(${c.id})" style="margin-left:4px">🗑️</button>
       </td>
     </tr>`).join('');
+}
+function openCatModalById(id){
+  const category=allCats.find(c=>c.id===id);
+  if(category)openCatModal(category);
 }
 function openCatModal(c=null){
   editCatId=c?c.id:null;
@@ -425,8 +455,8 @@ async function delCat(id){if(!confirm('O\'chirasizmi?'))return;await authFetch(`
 async function loadProductsTable(){
   if(!allCats.length){const r=await authFetch(`${API}/api/categories/all`);allCats=await r.json();}
   const r=await authFetch(`${API}/api/products/all`);if(!r)return;
-  const products=await r.json();
-  document.getElementById('products-table').innerHTML=products.map(p=>{
+  allProducts=await r.json();
+  document.getElementById('products-table').innerHTML=allProducts.map(p=>{
     const cat=allCats.find(c=>c.id===p.category_id);
     return`<tr>
       <td>${p.images&&p.images[0]?`<img class="product-img-thumb" src="${p.images[0]}"/>`:'—'}</td>
@@ -435,11 +465,15 @@ async function loadProductsTable(){
       <td>${Number(p.price).toLocaleString()} so'm</td>
       <td>${p.stock}</td>
       <td>
-        <button class="btn btn-sm btn-primary" onclick='openProductModal(${JSON.stringify(p).replace(/"/g,"&quot;")})'>✏️</button>
+        <button class="btn btn-sm btn-primary" onclick="openProductModalById(${p.id})">✏️</button>
         <button class="btn btn-sm btn-danger" onclick="delProduct(${p.id})" style="margin-left:4px">🗑️</button>
       </td>
     </tr>`;
   }).join('');
+}
+function openProductModalById(id){
+  const product=allProducts.find(p=>p.id===id);
+  if(product)openProductModal(product);
 }
 async function openProductModal(p=null){
   editProdId=p?p.id:null;newProdImgs=[];existingProdImgs=p?(p.images||[]):[];
@@ -613,6 +647,33 @@ async function loadUsersTable(){
       <td>${u.language||'uz'}</td>
       <td><span class="badge ${u.is_verified?'badge-green':'badge-yellow'}">${u.is_verified?'✅ Tasdiqlangan':'⏳ Kutilmoqda'}</span></td>
     </tr>`).join('');
+}
+
+async function loadSettings(){
+  const r=await authFetch(`${API}/api/admin/settings`);if(!r)return;
+  const s=await r.json();
+  document.getElementById('set-shop-name-uz').value=s.shop_name_uz||'';
+  document.getElementById('set-shop-name-ru').value=s.shop_name_ru||'';
+  document.getElementById('set-all-title-uz').value=s.all_products_title_uz||'';
+  document.getElementById('set-all-title-ru').value=s.all_products_title_ru||'';
+  document.getElementById('set-logo').value='';
+  document.getElementById('set-logo-preview').innerHTML=s.logo_url?`<div class="img-preview-wrap"><img class="img-preview" src="${s.logo_url}"/></div>`:'';
+  document.getElementById('settings-status').textContent='';
+}
+
+async function saveSettings(){
+  const fd=new FormData();
+  fd.append('shop_name_uz',document.getElementById('set-shop-name-uz').value);
+  fd.append('shop_name_ru',document.getElementById('set-shop-name-ru').value);
+  fd.append('all_products_title_uz',document.getElementById('set-all-title-uz').value);
+  fd.append('all_products_title_ru',document.getElementById('set-all-title-ru').value);
+  const logo=document.getElementById('set-logo').files[0];
+  if(logo)fd.append('logo',logo);
+  const status=document.getElementById('settings-status');
+  status.textContent='Saqlanmoqda...';
+  const r=await authFetch(`${API}/api/admin/settings`,{method:'PUT',body:fd});
+  status.textContent=r&&r.ok?'Saqlab qo\'yildi':'Xato yuz berdi';
+  if(r&&r.ok)loadSettings();
 }
 
 function st(s){return{pending:'⏳ Kutilmoqda',confirmed:'✅ Tasdiqlandi',delivering:'🚚 Yetkazilmoqda',delivered:'📦 Yetkazildi',cancelled:'❌ Bekor'}[s]||s}

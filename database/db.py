@@ -1,13 +1,13 @@
+import asyncio
+from datetime import datetime
+
+from sqlalchemy import BigInteger, Column, DateTime, Float, ForeignKey, Integer, JSON, String, Text, Boolean, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, JSON
 from sqlalchemy.orm import relationship
-from datetime import datetime
-import sys, os
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from config import DATABASE_URL
 
-engine = create_async_engine(DATABASE_URL, echo=False)
+engine = create_async_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 class Base(DeclarativeBase):
@@ -16,7 +16,7 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
-    telegram_id = Column(Integer, unique=True, nullable=False)
+    telegram_id = Column(BigInteger, unique=True, nullable=False)
     phone = Column(String(20), nullable=True)
     full_name = Column(String(100), nullable=True)
     username = Column(String(100), nullable=True)
@@ -141,9 +141,40 @@ class AdminSession(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     expires_at = Column(DateTime, nullable=False)
 
+class ShopSettings(Base):
+    __tablename__ = "shop_settings"
+    id = Column(Integer, primary_key=True)
+    shop_name_uz = Column(String(200), default="Do'kon")
+    shop_name_ru = Column(String(200), default="Магазин")
+    all_products_title_uz = Column(String(200), default="Barcha mahsulotlar")
+    all_products_title_ru = Column(String(200), default="Все товары")
+    logo_url = Column(String(500), nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class BrowserAuthCode(Base):
+    __tablename__ = "browser_auth_codes"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    phone = Column(String(20), nullable=False)
+    code = Column(String(10), nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 async def init_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    last_error = None
+    for attempt in range(1, 11):
+        try:
+            async with engine.begin() as conn:
+                await conn.execute(text("SELECT 1"))
+                await conn.run_sync(Base.metadata.create_all)
+            return
+        except Exception as exc:
+            last_error = exc
+            if attempt == 10:
+                raise
+            await asyncio.sleep(2)
+
+    raise last_error
 
 async def get_db():
     async with AsyncSessionLocal() as session:

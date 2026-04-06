@@ -10,11 +10,15 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--primary:#5B5BD6;--primary-light:#ededff;--accent:#FF6B35;--text:#1a1a2e;--muted:#8a8a9a;--border:#e8e8f0;--success:#22c55e;--danger:#ef4444;--warn:#f59e0b;--shadow:0 2px 16px rgba(91,91,214,.10);--radius:16px}
+body.dark{--bg:#111827;--card:#18212f;--primary:#7c83ff;--primary-light:#232c45;--accent:#ff8b5c;--text:#f5f7fb;--muted:#9aa7bd;--border:#283247;--success:#34d399;--danger:#fb7185;--warn:#fbbf24;--shadow:0 10px 30px rgba(0,0,0,.35)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 .nav{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--card);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:10px}
 .nav-back{width:36px;height:36px;border-radius:50%;background:var(--bg);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0}
+.nav-logo{width:30px;height:30px;border-radius:10px;object-fit:cover;background:var(--primary-light);display:none;flex-shrink:0}
+.nav-logo.show{display:block}
 .nav-title{font-weight:800;font-size:17px;flex:1}
+.theme-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
 .nav-lang{display:flex;gap:4px}
 .nav-lang button{padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--bg);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
 .nav-lang button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
@@ -26,6 +30,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .categories-scroll::-webkit-scrollbar{display:none}
 .cat-chip{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
 .cat-chip-img{width:58px;height:58px;border-radius:50%;object-fit:cover;background:var(--primary-light);border:2.5px solid transparent;transition:border-color .2s;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:24px}
+.cat-chip-img img{width:100%;height:100%;object-fit:cover;display:block}
 .cat-chip.active .cat-chip-img{border-color:var(--primary)}
 .cat-chip-name{font-size:11px;font-weight:700;color:var(--muted);text-align:center;max-width:64px}
 .cat-chip.active .cat-chip-name{color:var(--primary)}
@@ -36,14 +41,19 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .product-card-img{width:100%;aspect-ratio:1;object-fit:cover;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;overflow:hidden}
 .product-card-img img{width:100%;height:100%;object-fit:cover}
 .wishlist-btn{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.9);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;z-index:2}
-.product-card-body{padding:10px}
+.product-card-body{padding:10px 10px 46px;position:relative}
 .product-card-title{font-size:13px;font-weight:700;line-height:1.3;margin-bottom:4px}
 .product-price{font-size:15px;font-weight:900;color:var(--primary)}
 .product-old-price{font-size:11px;color:var(--muted);text-decoration:line-through}
 .product-rating{font-size:11px;color:var(--warn);margin-top:2px}
 .add-btn{position:absolute;bottom:10px;right:10px;width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;border:none;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(91,91,214,.4)}
+.card-qty-control{position:absolute;bottom:10px;right:10px;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.96);border:1px solid var(--border);border-radius:999px;padding:4px 6px;box-shadow:0 2px 10px rgba(0,0,0,.08);z-index:2}
+.card-qty-btn{width:24px;height:24px;border-radius:50%;border:none;background:var(--primary);color:#fff;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.card-qty-num{min-width:18px;text-align:center;font-size:12px;font-weight:800}
 .page{position:fixed;inset:0;background:var(--bg);z-index:200;overflow-y:auto;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
 .page.open{transform:translateX(0)}
+.tab-page{transform:none;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .22s ease,visibility .22s ease}
+.tab-page.open{opacity:1;visibility:visible;pointer-events:auto}
 .product-images-scroll{display:flex;overflow-x:auto;scrollbar-width:none}
 .product-images-scroll::-webkit-scrollbar{display:none}
 .product-images-scroll img{width:100vw;height:280px;object-fit:cover;flex-shrink:0}
@@ -115,7 +125,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .map-address-input{width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:inherit;outline:none;background:var(--card);margin-bottom:8px}
 .delivery-info-box{background:var(--primary-light);border-radius:12px;padding:12px 16px;margin:0 16px 8px;font-size:13px;font-weight:700;color:var(--primary)}
 .confirm-btn{width:calc(100% - 32px);margin:0 16px 16px;padding:14px;border-radius:14px;background:var(--success);color:#fff;border:none;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
-.bottom-tabs{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:100;padding:0 0 env(safe-area-inset-bottom,0)}
+.bottom-tabs{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:300;padding:0 0 env(safe-area-inset-bottom,0)}
 .tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:none;background:none;cursor:pointer;font-family:inherit}
 .tab-icon{font-size:22px;position:relative}
 .tab-label{font-size:10px;font-weight:700;color:var(--muted)}
@@ -128,11 +138,35 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .empty-state p{font-size:15px;font-weight:600}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(30,30,50,.92);color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:700;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.auth-overlay{position:fixed;inset:0;background:rgba(9,14,25,.55);backdrop-filter:blur(10px);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px}
+.auth-overlay.open{display:flex}
+.auth-card{width:min(100%,360px);background:var(--card);border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow);padding:22px}
+.auth-title{font-size:22px;font-weight:900;margin-bottom:6px}
+.auth-subtitle{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:16px}
+.auth-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:14px;background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;outline:none;margin-bottom:10px}
+.auth-btn{width:100%;padding:13px 16px;border:none;border-radius:14px;background:var(--primary);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
+.auth-muted-btn{width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:14px;background:transparent;color:var(--text);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px}
+.auth-note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+.auth-status{font-size:12px;color:var(--muted);min-height:18px;margin-top:10px}
+.profile-hint{font-size:13px;color:var(--muted);line-height:1.5;margin-top:6px}
+@media (min-width: 768px){
+  body{background:radial-gradient(circle at top,#dde5ff 0,#eef2ff 30%,#d7ddea 100%) fixed}
+  body.dark{background:radial-gradient(circle at top,#18233b 0,#101828 40%,#0b1120 100%) fixed}
+  .content-area{max-width:430px;margin:0 auto;min-height:100vh;box-shadow:0 18px 60px rgba(15,23,42,.18)}
+  .nav,.bottom-tabs,.toast{left:50%;right:auto;width:430px}
+  .nav,.bottom-tabs{transform:translateX(-50%)}
+  .toast{transform:translateX(-50%) translateY(20px)}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  .page{left:50%;right:auto;width:430px;transform:translateX(calc(-50% + 110%))}
+  .page.open{transform:translateX(-50%)}
+  .product-images-scroll img{width:430px}
+}
 </style>
 </head>
 <body>
 
 <div class="nav" id="main-nav">
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" style="order:3">🌙</button>
   <div class="nav-title" id="nav-title">🛍️ Do'kon</div>
   <div class="nav-lang">
     <button id="btn-uz" class="active" onclick="setLang('uz')">🇺🇿 UZ</button>
@@ -160,7 +194,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 </div>
 
 <!-- CART -->
-<div class="page" id="page-cart">
+<div class="page tab-page" id="page-cart">
   <div class="nav">
     <button class="nav-back" onclick="closePage('page-cart')">←</button>
     <div class="nav-title" id="cart-nav-title">🛒 Savatcha</div>
@@ -169,7 +203,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 </div>
 
 <!-- ORDERS -->
-<div class="page" id="page-orders">
+<div class="page tab-page" id="page-orders">
   <div class="nav">
     <button class="nav-back" onclick="closePage('page-orders')">←</button>
     <div class="nav-title">📋 Buyurtmalar</div>
@@ -178,7 +212,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 </div>
 
 <!-- PROFILE -->
-<div class="page" id="page-profile">
+<div class="page tab-page" id="page-profile">
   <div class="nav">
     <button class="nav-back" onclick="closePage('page-profile')">←</button>
     <div class="nav-title">👤 Profil</div>
@@ -187,7 +221,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 </div>
 
 <!-- WISHLIST PAGE -->
-<div class="page" id="page-wishlist">
+<div class="page tab-page" id="page-wishlist">
   <div class="nav">
     <button class="nav-back" onclick="closePage('page-wishlist')">←</button>
     <div class="nav-title">❤️ Sevimlilar</div>
@@ -231,6 +265,24 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 
 <div class="toast" id="toast"></div>
 
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-title" id="auth-title">Telegram orqali tasdiqlash</div>
+    <div class="auth-subtitle" id="auth-subtitle">Brauzerda buyurtma berish uchun telefon raqamingizni kiriting. Kod Telegram akkauntingizga yuboriladi.</div>
+    <div id="auth-step-phone">
+      <input class="auth-input" id="auth-phone" placeholder="+998 90 123 45 67"/>
+      <button class="auth-btn" onclick="requestBrowserCode()">Kodni yuborish</button>
+    </div>
+    <div id="auth-step-code" style="display:none">
+      <input class="auth-input" id="auth-code" placeholder="6 xonali kod"/>
+      <button class="auth-btn" onclick="verifyBrowserCode()">Tasdiqlash</button>
+      <button class="auth-muted-btn" onclick="backToPhoneStep()">Boshqa raqam</button>
+    </div>
+    <div class="auth-status" id="auth-status"></div>
+    <div class="auth-note" id="auth-note">Avval botda telefon raqamingiz bilan ro'yxatdan o'tgan bo'lishingiz kerak.</div>
+  </div>
+</div>
+
 <script>
 const API = '';
 const tg = window.Telegram?.WebApp;
@@ -242,6 +294,18 @@ let mapInstance = null, selectedLat = null, selectedLng = null, selectedAddress 
 let currentProduct = null, currentQty = 1;
 let appliedCoupon = null, deliveryPrice = 0, deliveryDist = 0;
 let wishlistIds = new Set();
+let cartItemsMap = new Map();
+let currentProducts = [];
+let currentSearch = '';
+let browserAuthPendingPhone = '';
+let theme = localStorage.getItem('theme') || 'light';
+let shopSettings = {
+  shop_name_uz: "Do'kon",
+  shop_name_ru: 'Магазин',
+  all_products_title_uz: 'Barcha mahsulotlar',
+  all_products_title_ru: 'Все товары',
+  logo_url: null
+};
 
 const T = {
   uz: {
@@ -286,9 +350,107 @@ function t(key){return T[lang][key]||key}
 function title(p){return lang==='uz'?p.title_uz:p.title_ru}
 function desc(p){return lang==='uz'?p.description_uz:p.description_ru}
 function catName(c){return lang==='uz'?c.name_uz:c.name_ru}
+function shopName(){return lang==='uz'?(shopSettings.shop_name_uz||"Do'kon"):(shopSettings.shop_name_ru||'Магазин')}
+function allProductsTitle(){return lang==='uz'?(shopSettings.all_products_title_uz||'Barcha mahsulotlar'):(shopSettings.all_products_title_ru||'Все товары')}
 function stars(r){return '⭐'.repeat(Math.round(r||0))}
 function fmt(n){return Number(n||0).toLocaleString()}
 
+function isBrowserMode(){return !tg?.initDataUnsafe?.user}
+function normalizePhone(phone){return phone.replace(/[^\d+]/g,'')}
+function applyTheme(){
+  document.body.classList.toggle('dark',theme==='dark');
+  const btn=document.getElementById('theme-btn');
+  if(btn)btn.textContent=theme==='dark'?'☀️':'🌙';
+}
+function toggleTheme(){
+  theme=theme==='dark'?'light':'dark';
+  localStorage.setItem('theme',theme);
+  applyTheme();
+  if(document.getElementById('page-profile').classList.contains('open'))loadProfile();
+}
+function restoreBrowserSession(){
+  if(!isBrowserMode())return false;
+  const raw=localStorage.getItem('browser_user');
+  if(!raw)return false;
+  try{
+    const user=JSON.parse(raw);
+    if(user?.telegram_id){
+      userId=user.telegram_id;
+      userData=user;
+      lang=user.language||lang;
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function saveBrowserSession(user){localStorage.setItem('browser_user',JSON.stringify(user))}
+function clearBrowserSession(){localStorage.removeItem('browser_user')}
+function openAuthOverlay(){document.getElementById('auth-overlay').classList.add('open')}
+function closeAuthOverlay(){document.getElementById('auth-overlay').classList.remove('open')}
+function backToPhoneStep(){
+  document.getElementById('auth-step-phone').style.display='';
+  document.getElementById('auth-step-code').style.display='none';
+  document.getElementById('auth-status').textContent='';
+}
+function requireAuth(){
+  if(userId)return true;
+  openAuthOverlay();
+  return false;
+}
+async function requestBrowserCode(){
+  const phone=normalizePhone(document.getElementById('auth-phone').value.trim());
+  const status=document.getElementById('auth-status');
+  if(!phone){status.textContent='Telefon raqamini kiriting';return;}
+  status.textContent='Kod yuborilmoqda...';
+  const r=await fetch(`${API}/api/auth/browser/request-code`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone})});
+  if(!r.ok){
+    const err=await r.json().catch(()=>({detail:'Xato yuz berdi'}));
+    status.textContent=err.detail||'Xato yuz berdi';
+    return;
+  }
+  browserAuthPendingPhone=phone;
+  document.getElementById('auth-step-phone').style.display='none';
+  document.getElementById('auth-step-code').style.display='';
+  status.textContent='Kod Telegram akkauntingizga yuborildi';
+}
+async function verifyBrowserCode(){
+  const code=document.getElementById('auth-code').value.trim();
+  const status=document.getElementById('auth-status');
+  if(!browserAuthPendingPhone||!code){status.textContent='Kod kiriting';return;}
+  status.textContent='Tasdiqlanmoqda...';
+  const r=await fetch(`${API}/api/auth/browser/verify`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:browserAuthPendingPhone,code})});
+  if(!r.ok){
+    const err=await r.json().catch(()=>({detail:'Kod noto\'g\'ri'}));
+    status.textContent=err.detail||'Kod noto\'g\'ri';
+    return;
+  }
+  const data=await r.json();
+  userData=data.user;
+  userId=data.user.telegram_id;
+  lang=data.user.language||lang;
+  saveBrowserSession(data.user);
+  closeAuthOverlay();
+  await afterAuthReady();
+  showToast('Tasdiqlandi');
+}
+async function afterAuthReady(){
+  updateLangUI();
+  await loadWishlistIds();
+  await syncCartState(true);
+  if(document.getElementById('page-profile').classList.contains('open'))loadProfile();
+  if(document.getElementById('page-cart').classList.contains('open'))await loadCart();
+  if(document.getElementById('page-orders').classList.contains('open'))await loadOrders();
+}
+async function toggleProfileLang(){
+  await setLang(lang==='uz'?'ru':'uz');
+  loadProfile();
+}
+function logoutBrowserAuth(){
+  userId=null;userData=null;wishlistIds=new Set();cartItemsMap=new Map();cartCount=0;
+  clearBrowserSession();
+  document.getElementById('cart-badge').style.display='none';
+  loadProfile();
+}
 function showToast(msg){
   const el=document.getElementById('toast');
   el.textContent=msg;el.classList.add('show');
@@ -296,31 +458,74 @@ function showToast(msg){
 }
 
 async function init(){
+  applyTheme();
+  await loadSettings();
   const tgUser=tg?.initDataUnsafe?.user;
+  restoreBrowserSession();
   if(tgUser){
     userId=tgUser.id;
     try{
       const res=await fetch(`${API}/api/users/${userId}`);
       if(res.ok){userData=await res.json();lang=userData.language||'uz';}
     }catch(e){}
-    if(userId) loadWishlistIds();
+    if(userId){
+      await loadWishlistIds();
+      await syncCartState();
+    }
   }
   updateLangUI();
   await loadCategories();
   await loadProducts();
-  await updateCartBadge();
 }
 
-function setLang(l){
-  lang=l;updateLangUI();loadCategories();loadProducts(selectedCategoryId);
-  if(userId) fetch(`${API}/api/users/${userId}/language?lang=${l}`,{method:'PUT'});
+async function setLang(l){
+  lang=l;
+  if(userData)userData.language=l;
+  updateLangUI();
+  loadCategories();
+  loadProducts(selectedCategoryId,currentSearch);
+  if(userId) await fetch(`${API}/api/users/${userId}/language?lang=${l}`,{method:'PUT'});
+  if(isBrowserMode() && userData)saveBrowserSession(userData);
 }
 
 function updateLangUI(){
   document.getElementById('btn-uz').className=lang==='uz'?'active':'';
   document.getElementById('btn-ru').className=lang==='ru'?'active':'';
   document.getElementById('search-input').placeholder=t('search');
+  const navTitle=document.getElementById('nav-title');
+  navTitle.textContent=shopName();
+  document.title=shopName();
+  document.getElementById('section-title').textContent=allProductsTitle();
+  document.getElementById('auth-title').textContent=lang==='uz'?'Telegram orqali tasdiqlash':'Подтверждение через Telegram';
+  document.getElementById('auth-subtitle').textContent=lang==='uz'
+    ?'Brauzerda buyurtma berish uchun telefon raqamingizni kiriting. Kod Telegram akkauntingizga yuboriladi.'
+    :'Чтобы оформить заказ в браузере, введите номер телефона. Код придет в Telegram.';
+  document.getElementById('auth-note').textContent=lang==='uz'
+    ?'Avval botda telefon raqamingiz bilan ro\'yxatdan o\'tgan bo\'lishingiz kerak.'
+    :'Сначала зарегистрируйтесь в боте с этим номером телефона.';
+  let logoEl=document.getElementById('nav-logo');
+  if(!logoEl){
+    logoEl=document.createElement('img');
+    logoEl.id='nav-logo';
+    logoEl.className='nav-logo';
+    logoEl.alt='Logo';
+    navTitle.parentNode.insertBefore(logoEl, navTitle);
+  }
+  if(shopSettings.logo_url){
+    logoEl.src=shopSettings.logo_url;
+    logoEl.classList.add('show');
+  }else{
+    logoEl.removeAttribute('src');
+    logoEl.classList.remove('show');
+  }
   ['home','cart','orders','profile'].forEach(k=>document.getElementById(`tab-label-${k}`).textContent=t(k));
+}
+
+async function loadSettings(){
+  try{
+    const r=await fetch(`${API}/api/settings`);
+    if(r.ok)shopSettings=await r.json();
+  }catch(e){}
 }
 
 async function loadWishlistIds(){
@@ -340,10 +545,12 @@ async function loadCategories(){
 }
 
 async function loadProducts(categoryId=null,search=''){
+  currentSearch=search;
   let url=`${API}/api/products?`;
   if(categoryId)url+=`category_id=${categoryId}&`;
   if(search)url+=`search=${encodeURIComponent(search)}&`;
   const products=await(await fetch(url)).json();
+  currentProducts=products;
   renderProducts(products);
 }
 
@@ -363,9 +570,28 @@ function renderProducts(products){
         <div class="product-price">${fmt(p.price)} so'm</div>
         ${p.old_price?`<div class="product-old-price">${fmt(p.old_price)} so'm</div>`:''}
         ${p.rating?`<div class="product-rating">${stars(p.rating)} (${p.review_count||0})</div>`:''}
+        ${renderCardCartControl(p.id)}
       </div>
-      <button class="add-btn" onclick="event.stopPropagation();quickAdd(${p.id})">+</button>
     </div>`).join('');
+}
+
+function renderCardCartControl(pid){
+  const qty=cartItemsMap.get(pid)||0;
+  if(qty<=0){
+    return `<button class="add-btn" onclick="event.stopPropagation();quickAdd(${pid})">+</button>`;
+  }
+  return `<div class="card-qty-control" onclick="event.stopPropagation()">
+    <button class="card-qty-btn" onclick="updateQty(${pid},${qty-1},true)">−</button>
+    <span class="card-qty-num">${qty}</span>
+    <button class="card-qty-btn" onclick="updateQty(${pid},${qty+1},true)">+</button>
+    <div class="profile-row" onclick="toggleTheme()">
+      <div class="profile-row-icon">${theme==='dark'?'☀️':'🌙'}</div>
+      <div class="profile-row-text">${theme==='dark'?(lang==='uz'?'Light rejim':'Светлая тема'):(lang==='uz'?'Dark rejim':'Тёмная тема')}</div>
+      <div class="profile-row-arrow">вЂє</div>
+    </div>
+    ${isBrowserMode()&&u?`<div class="profile-row" onclick="logoutBrowserAuth()"><div class="profile-row-icon">рџљЄ</div><div class="profile-row-text">${lang==='uz'?'Chiqish':'Выйти'}</div><div class="profile-row-arrow">вЂє</div></div>`:''}
+    ${!u?`<div class="profile-row" onclick="openAuthOverlay()"><div class="profile-row-icon">рџ”ђ</div><div class="profile-row-text">${lang==='uz'?'Telegram kod bilan kirish':'Войти по коду Telegram'}</div><div class="profile-row-arrow">вЂє</div></div>`:''}
+  </div>`;
 }
 
 function filterByCategory(id){
@@ -376,14 +602,14 @@ let searchTimer;
 function onSearch(val){clearTimeout(searchTimer);searchTimer=setTimeout(()=>loadProducts(selectedCategoryId,val),350)}
 
 async function toggleWish(pid,btn){
-  if(!userId){showToast('Telegram orqali kiring!');return;}
+  if(!requireAuth())return;
   const res=await(await fetch(`${API}/api/wishlist/${userId}/${pid}`,{method:'POST'})).json();
   if(res.added){wishlistIds.add(pid);btn.textContent='❤️';showToast(t('added_wish'));}
   else{wishlistIds.delete(pid);btn.textContent='🤍';showToast(t('removed_wish'));}
 }
 
 async function toggleWishFromDetail(){
-  if(!currentProduct||!userId)return;
+  if(!currentProduct||!requireAuth())return;
   const pid=currentProduct.id;
   const res=await(await fetch(`${API}/api/wishlist/${userId}/${pid}`,{method:'POST'})).json();
   const btn=document.getElementById('detail-wish-btn');
@@ -393,7 +619,7 @@ async function toggleWishFromDetail(){
 
 async function openProduct(id){
   const p=await(await fetch(`${API}/api/products/${id}`)).json();
-  currentProduct=p;currentQty=1;
+  currentProduct=p;currentQty=cartItemsMap.get(id)||1;
   const imgs=p.images&&p.images.length?p.images:[];
   const inWish=wishlistIds.has(id);
   document.getElementById('detail-wish-btn').textContent=inWish?'❤️':'🤍';
@@ -480,6 +706,7 @@ function selectStar(n){
 }
 
 async function submitReview(pid){
+  if(!requireAuth())return;
   if(!selectedStars){showToast('⭐ Baho bering!');return;}
   const comment=document.getElementById('review-text')?.value;
   await fetch(`${API}/api/reviews`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:userId,product_id:pid,rating:selectedStars,comment})});
@@ -490,34 +717,44 @@ async function submitReview(pid){
 function changeQty(d){currentQty=Math.max(1,currentQty+d);document.getElementById('qty-display').textContent=currentQty;}
 
 async function addToCart(pid){
-  if(!userId){showToast('Telegram orqali kiring!');return;}
+  if(!requireAuth())return;
   await fetch(`${API}/api/cart`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:userId,product_id:pid,quantity:currentQty})});
   tg?.HapticFeedback?.impactOccurred('light');
-  await updateCartBadge();
+  await syncCartState(true);
   showToast(t('added_to_cart'));
   closePage('page-product');
 }
 
 async function quickAdd(pid){
-  if(!userId)return;
+  if(!requireAuth())return;
   await fetch(`${API}/api/cart`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:userId,product_id:pid,quantity:1})});
   tg?.HapticFeedback?.impactOccurred('light');
-  await updateCartBadge();
+  await syncCartState(true);
   showToast(t('added_to_cart'));
 }
 
-async function updateCartBadge(){
-  if(!userId)return;
+async function syncCartState(refreshProducts=false){
+  if(!userId)return [];
   const items=await(await fetch(`${API}/api/cart/${userId}`)).json();
+  cartItemsMap=new Map(items.map(i=>[i.product_id,i.quantity]));
   cartCount=items.reduce((s,i)=>s+i.quantity,0);
   const badge=document.getElementById('cart-badge');
   badge.textContent=cartCount;badge.style.display=cartCount>0?'':'none';
+  if(refreshProducts){
+    if(currentProducts.length) renderProducts(currentProducts);
+    else await loadProducts(selectedCategoryId,currentSearch);
+  }
+  return items;
 }
 
 // CART PAGE
 let cartAppliedCoupon=null;
 async function loadCart(){
   const inner=document.getElementById('cart-inner');
+  if(!userId){
+    inner.innerHTML=`<div class="empty-state"><div class="empty-icon">🔐</div><p>${lang==='uz'?'Savat uchun tizimga kiring':'Войдите, чтобы открыть корзину'}</p><button class="auth-btn" style="margin-top:12px" onclick="openAuthOverlay()">${lang==='uz'?'Telegram kod bilan kirish':'Войти по коду Telegram'}</button></div>`;
+    return;
+  }
   if(!userId){inner.innerHTML=`<div class="empty-state"><div class="empty-icon">🛒</div><p>${t('cart_empty')}</p></div>`;return;}
   const items=await(await fetch(`${API}/api/cart/${userId}`)).json();
   if(!items.length){inner.innerHTML=`<div class="empty-state"><div class="empty-icon">🛒</div><p>${t('cart_empty')}</p></div>`;return;}
@@ -564,12 +801,15 @@ async function applyCoupon(){
   }catch{showToast(t('coupon_error'));}
 }
 
-async function updateQty(pid,qty){
+async function updateQty(pid,qty,refreshProducts=false){
   await fetch(`${API}/api/cart`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:userId,product_id:pid,quantity:qty})});
-  await updateCartBadge();await loadCart();
+  await syncCartState(true);
+  if(document.getElementById('page-cart').classList.contains('open')) await loadCart();
+  if(refreshProducts && document.getElementById('page-wishlist').classList.contains('open')) await openWishlist();
 }
 
 function openCheckout(){
+  if(!requireAuth())return;
   openPage('page-checkout');
   setTimeout(initMap,350);
 }
@@ -601,6 +841,7 @@ function initMap(){
 }
 
 async function confirmOrder(){
+  if(!requireAuth())return;
   if(!selectedLat){showToast(t('map_select'));return;}
   const comment=document.getElementById('order-comment').value;
   const res=await fetch(`${API}/api/orders`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
@@ -611,8 +852,9 @@ async function confirmOrder(){
     tg?.HapticFeedback?.notificationOccurred('success');
     cartAppliedCoupon=null;
     closePage('page-checkout');closePage('page-cart');
-    await updateCartBadge();
+    await syncCartState(true);
     showToast(t('order_placed'));
+    await loadOrders();
     switchTab('orders');
   }
 }
@@ -620,6 +862,10 @@ async function confirmOrder(){
 // ORDERS
 async function loadOrders(){
   const inner=document.getElementById('orders-inner');
+  if(!userId){
+    inner.innerHTML=`<div class="empty-state"><div class="empty-icon">🔐</div><p>${lang==='uz'?'Buyurtmalarni ko\'rish uchun tizimga kiring':'Войдите, чтобы увидеть заказы'}</p><button class="auth-btn" style="margin-top:12px" onclick="openAuthOverlay()">${lang==='uz'?'Telegram kod bilan kirish':'Войти по коду Telegram'}</button></div>`;
+    return;
+  }
   if(!userId){inner.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><p>${t('orders_empty')}</p></div>`;return;}
   const orders=await(await fetch(`${API}/api/orders/${userId}`)).json();
   if(!orders.length){inner.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><p>${t('orders_empty')}</p></div>`;return;}
@@ -655,7 +901,7 @@ function loadProfile(){
       <div class="profile-row-text">${lang==='uz'?'Sevimlilar':'Избранное'}</div>
       <div class="profile-row-arrow">›</div>
     </div>
-    <div class="profile-row" onclick="setLang(lang==='uz'?'ru':'uz');loadProfile()">
+    <div class="profile-row" onclick="toggleProfileLang()">
       <div class="profile-row-icon">🌐</div>
       <div class="profile-row-text">${lang==='uz'?"O'zbek → Русский":"Русский → O'zbek"}</div>
       <div class="profile-row-arrow">›</div>
@@ -666,6 +912,10 @@ function loadProfile(){
 async function openWishlist(){
   openPage('page-wishlist');
   const inner=document.getElementById('wishlist-inner');
+  if(!userId){
+    inner.innerHTML=`<div class="empty-state"><div class="empty-icon">🔐</div><p>${lang==='uz'?'Sevimlilar uchun tizimga kiring':'Войдите, чтобы открыть избранное'}</p><button class="auth-btn" style="margin-top:12px" onclick="openAuthOverlay()">${lang==='uz'?'Telegram kod bilan kirish':'Войти по коду Telegram'}</button></div>`;
+    return;
+  }
   if(!userId){inner.innerHTML=`<div class="empty-state"><div class="empty-icon">❤️</div><p>${t('wishlist_empty')}</p></div>`;return;}
   const items=await(await fetch(`${API}/api/wishlist/${userId}`)).json();
   if(!items.length){inner.innerHTML=`<div class="empty-state"><div class="empty-icon">❤️</div><p>${t('wishlist_empty')}</p></div>`;return;}
@@ -676,20 +926,21 @@ async function openWishlist(){
         <div class="product-card-title">${title(i.product)}</div>
         <div class="product-price">${fmt(i.product.price)} so'm</div>
       </div>
-      <button class="add-btn" onclick="event.stopPropagation();quickAdd(${i.product_id})">+</button>
+      ${renderCardCartControl(i.product_id)}
     </div>`).join('')}</div>`;
 }
 
 function openPage(id){document.getElementById(id).classList.add('open')}
 function closePage(id){document.getElementById(id).classList.remove('open')}
+function closeAllPages(){['page-product','page-cart','page-orders','page-profile','page-wishlist','page-checkout'].forEach(closePage)}
 
 function switchTab(tab){
   ['home','cart','orders','profile'].forEach(t=>document.getElementById(`tab-${t}`).className='tab-btn');
   document.getElementById(`tab-${tab}`).className='tab-btn active';
+  closeAllPages();
   if(tab==='cart'){openPage('page-cart');loadCart();}
   else if(tab==='orders'){openPage('page-orders');loadOrders();}
   else if(tab==='profile'){openPage('page-profile');loadProfile();}
-  else{['page-cart','page-orders','page-profile'].forEach(closePage);}
 }
 
 init();

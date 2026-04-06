@@ -3,7 +3,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from config import BOT_TOKEN
-from handlers import router
+from bot.handlers import router
 from database.db import init_db
 
 logging.basicConfig(level=logging.INFO)

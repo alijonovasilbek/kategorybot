@@ -1,9 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete, func, and_
 from sqlalchemy.orm import selectinload
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from .db import (User, Category, Product, CartItem, Order, OrderItem,
-                 Coupon, Review, Wishlist, AdminSession, AsyncSessionLocal)
+                 Coupon, Review, Wishlist, AdminSession, ShopSettings, BrowserAuthCode, AsyncSessionLocal)
 
 # USER
 async def get_or_create_user(telegram_id, full_name=None, username=None):
@@ -30,6 +30,17 @@ async def get_user(telegram_id):
         r = await db.execute(select(User).where(User.telegram_id == telegram_id))
         return r.scalar_one_or_none()
 
+async def get_user_by_phone(phone):
+    async with AsyncSessionLocal() as db:
+        phones = {phone}
+        digits = "".join(ch for ch in phone if ch.isdigit())
+        if digits:
+            phones.add(digits)
+            if not digits.startswith("+"):
+                phones.add("+" + digits)
+        r = await db.execute(select(User).where(User.phone.in_(phones)))
+        return r.scalar_one_or_none()
+
 async def get_user_by_id(user_id):
     async with AsyncSessionLocal() as db:
         r = await db.execute(select(User).where(User.id == user_id))
@@ -38,6 +49,51 @@ async def get_user_by_id(user_id):
 async def get_all_users():
     async with AsyncSessionLocal() as db:
         return (await db.execute(select(User))).scalars().all()
+
+# SHOP SETTINGS
+async def get_shop_settings():
+    async with AsyncSessionLocal() as db:
+        settings = (await db.execute(select(ShopSettings).where(ShopSettings.id == 1))).scalar_one_or_none()
+        if not settings:
+            settings = ShopSettings(id=1)
+            db.add(settings)
+            await db.commit()
+            await db.refresh(settings)
+        return settings
+
+async def update_shop_settings(**kwargs):
+    async with AsyncSessionLocal() as db:
+        settings = (await db.execute(select(ShopSettings).where(ShopSettings.id == 1))).scalar_one_or_none()
+        if not settings:
+            settings = ShopSettings(id=1, **kwargs)
+            db.add(settings)
+        else:
+            for key, value in kwargs.items():
+                setattr(settings, key, value)
+        await db.commit()
+        await db.refresh(settings)
+        return settings
+
+async def create_browser_auth_code(user_id, phone, code, expires_at):
+    async with AsyncSessionLocal() as db:
+        await db.execute(delete(BrowserAuthCode).where(BrowserAuthCode.user_id == user_id))
+        db.add(BrowserAuthCode(user_id=user_id, phone=phone, code=code, expires_at=expires_at))
+        await db.commit()
+
+async def verify_browser_auth_code(phone, code):
+    async with AsyncSessionLocal() as db:
+        q = select(BrowserAuthCode).where(
+            BrowserAuthCode.phone == phone,
+            BrowserAuthCode.code == code,
+            BrowserAuthCode.expires_at > datetime.utcnow(),
+        )
+        auth = (await db.execute(q)).scalar_one_or_none()
+        if not auth:
+            return None
+        user = await db.get(User, auth.user_id)
+        await db.execute(delete(BrowserAuthCode).where(BrowserAuthCode.id == auth.id))
+        await db.commit()
+        return user
 
 # CATEGORIES
 async def get_categories(parent_id=None):
@@ -158,7 +214,10 @@ async def create_order(user_id, cart_items, address, latitude, longitude,
 
 async def get_user_orders(user_id):
     async with AsyncSessionLocal() as db:
-        q = select(Order).options(selectinload(Order.items).selectinload(OrderItem.product)).where(Order.user_id == user_id).order_by(Order.created_at.desc())
+        q = select(Order).options(
+            selectinload(Order.user),
+            selectinload(Order.items).selectinload(OrderItem.product)
+        ).where(Order.user_id == user_id).order_by(Order.created_at.desc())
         return (await db.execute(q)).scalars().all()
 
 async def get_all_orders(date_from=None, date_to=None, status=None):
@@ -307,14 +366,28 @@ async def get_stats():
         today_revenue = (await db.execute(select(func.sum(Order.total_price)).where(
             func.date(Order.created_at) == today, Order.status != 'cancelled'
         ))).scalar() or 0
-        from sqlalchemy import text
-        daily = (await db.execute(text(
-            "SELECT date(created_at) as d, COUNT(*) as cnt, SUM(total_price) as total "
-            "FROM orders WHERE created_at >= date('now','-7 days') "
-            "GROUP BY date(created_at) ORDER BY d"
-        ))).all()
+        start_date = today - timedelta(days=6)
+        daily_rows = (
+            await db.execute(
+                select(
+                    func.date(Order.created_at).label("d"),
+                    func.count(Order.id).label("cnt"),
+                    func.sum(Order.total_price).label("total"),
+                )
+                .where(func.date(Order.created_at) >= start_date)
+                .group_by(func.date(Order.created_at))
+                .order_by(func.date(Order.created_at))
+            )
+        ).all()
+        daily_map = {str(row.d): {"orders": row.cnt, "revenue": row.total or 0} for row in daily_rows}
+        daily = []
+        for offset in range(7):
+            current = start_date + timedelta(days=offset)
+            key = current.isoformat()
+            values = daily_map.get(key, {"orders": 0, "revenue": 0})
+            daily.append({"date": key, "orders": values["orders"], "revenue": values["revenue"]})
         return {
             "users": users, "products": products, "orders": orders, "revenue": revenue,
             "today_orders": today_orders, "today_revenue": today_revenue,
-            "daily": [{"date": str(r[0]), "orders": r[1], "revenue": r[2] or 0} for r in daily]
+            "daily": daily
         }

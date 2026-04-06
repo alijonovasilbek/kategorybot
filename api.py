@@ -1,17 +1,16 @@
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from aiogram import Bot
 from typing import Optional, List
 from datetime import datetime, timedelta
 from PIL import Image as PILImage
 import json, os, shutil, uuid, secrets, io, math
-import sys
-sys.path.append(os.path.dirname(__file__))
 from database.crud import *
 from database.db import init_db
-from bot.config import ADMIN_USERNAME, ADMIN_PASSWORD, SHOP_LAT, SHOP_LNG, DELIVERY_PRICE_PER_KM, DELIVERY_FREE_DISTANCE_KM, ORDER_GROUP_ID
+from config import ADMIN_USERNAME, ADMIN_PASSWORD, SHOP_LAT, SHOP_LNG, DELIVERY_PRICE_PER_KM, DELIVERY_FREE_DISTANCE_KM, BOT_TOKEN
 
 app = FastAPI(title="KategoryBot API")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
@@ -25,10 +24,6 @@ async def startup():
 
 # ── STATIC FILES ──────────────────────────────────────────────────────────────
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
-
-try:
-    app.mount("/", StaticFiles(directory="webapp", html=True), name="webapp")
-except: pass
 
 # ── HELPERS ───────────────────────────────────────────────────────────────────
 def haversine(lat1, lon1, lat2, lon2):
@@ -65,10 +60,29 @@ async def verify_admin(authorization: str = Header(None)):
     if not await check_admin_session(token): raise HTTPException(401, "Session expired")
     return token
 
+async def resolve_user_by_telegram_id(telegram_id: int):
+    user = await get_user(telegram_id)
+    if not user:
+        raise HTTPException(404, "User not found")
+    return user
+
 # ── ADMIN AUTH ────────────────────────────────────────────────────────────────
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+class ShopSettingsRequest(BaseModel):
+    shop_name_uz: str
+    shop_name_ru: str
+    all_products_title_uz: str
+    all_products_title_ru: str
+
+class BrowserPhoneRequest(BaseModel):
+    phone: str
+
+class BrowserCodeRequest(BaseModel):
+    phone: str
+    code: str
 
 @app.post("/api/admin/login")
 async def admin_login(req: LoginRequest):
@@ -87,6 +101,62 @@ async def admin_logout(token: str = Depends(verify_admin)):
 @app.get("/api/admin/check")
 async def admin_check(token: str = Depends(verify_admin)):
     return {"ok": True}
+
+@app.post("/api/auth/browser/request-code")
+async def request_browser_code(req: BrowserPhoneRequest):
+    user = await get_user_by_phone(req.phone)
+    if not user:
+        raise HTTPException(404, "Bunday telefon raqami bilan foydalanuvchi topilmadi")
+    if not user.telegram_id:
+        raise HTTPException(400, "Telegram hisob topilmadi")
+
+    code = f"{secrets.randbelow(900000) + 100000}"
+    expires_at = datetime.utcnow() + timedelta(minutes=5)
+    await create_browser_auth_code(user.id, req.phone, code, expires_at)
+
+    bot = Bot(BOT_TOKEN)
+    try:
+        await bot.send_message(
+            user.telegram_id,
+            f"Brauzerga kirish kodi: {code}\n\nKod 5 daqiqa amal qiladi."
+        )
+    finally:
+        await bot.session.close()
+    return {"ok": True, "masked_phone": req.phone[-4:].rjust(len(req.phone), "*")}
+
+@app.post("/api/auth/browser/verify")
+async def verify_browser_code(req: BrowserCodeRequest):
+    user = await verify_browser_auth_code(req.phone, req.code)
+    if not user:
+        raise HTTPException(400, "Kod noto'g'ri yoki eskirgan")
+    return {"ok": True, "user": _user_dict(user)}
+
+@app.get("/api/settings")
+async def get_settings_api():
+    return _settings_dict(await get_shop_settings())
+
+@app.get("/api/admin/settings")
+async def get_admin_settings_api(_=Depends(verify_admin)):
+    return _settings_dict(await get_shop_settings())
+
+@app.put("/api/admin/settings")
+async def update_admin_settings_api(
+    shop_name_uz: str = Form(...),
+    shop_name_ru: str = Form(...),
+    all_products_title_uz: str = Form(...),
+    all_products_title_ru: str = Form(...),
+    logo: Optional[UploadFile] = File(None),
+    _=Depends(verify_admin)
+):
+    data = {
+        "shop_name_uz": shop_name_uz,
+        "shop_name_ru": shop_name_ru,
+        "all_products_title_uz": all_products_title_uz,
+        "all_products_title_ru": all_products_title_ru,
+    }
+    if logo and logo.filename:
+        data["logo_url"] = save_image(logo, max_size=(600, 600))
+    return _settings_dict(await update_shop_settings(**data))
 
 # ── UPLOAD ────────────────────────────────────────────────────────────────────
 @app.post("/api/upload")
@@ -229,7 +299,8 @@ async def product_reviews(product_id: int):
 @app.post("/api/reviews")
 async def post_review(req: ReviewRequest):
     if not 1 <= req.rating <= 5: raise HTTPException(400, "Rating 1-5 orasida bo'lishi kerak")
-    await add_review(req.user_id, req.product_id, req.rating, req.comment)
+    user = await resolve_user_by_telegram_id(req.user_id)
+    await add_review(user.id, req.product_id, req.rating, req.comment)
     return {"ok": True}
 
 @app.delete("/api/admin/reviews/{review_id}")
@@ -247,17 +318,20 @@ async def admin_reviews(_=Depends(verify_admin)):
 # ── WISHLIST ──────────────────────────────────────────────────────────────────
 @app.get("/api/wishlist/{user_id}")
 async def get_wishlist_api(user_id: int):
-    items = await get_wishlist(user_id)
+    user = await resolve_user_by_telegram_id(user_id)
+    items = await get_wishlist(user.id)
     return [{"product_id": i.product_id, "product": _product_dict(i.product)} for i in items if i.product]
 
 @app.post("/api/wishlist/{user_id}/{product_id}")
 async def toggle_wishlist_api(user_id: int, product_id: int):
-    added = await toggle_wishlist(user_id, product_id)
+    user = await resolve_user_by_telegram_id(user_id)
+    added = await toggle_wishlist(user.id, product_id)
     return {"added": added}
 
 @app.get("/api/wishlist/{user_id}/{product_id}/check")
 async def check_wishlist(user_id: int, product_id: int):
-    return {"in_wishlist": await is_in_wishlist(user_id, product_id)}
+    user = await resolve_user_by_telegram_id(user_id)
+    return {"in_wishlist": await is_in_wishlist(user.id, product_id)}
 
 # ── COUPONS ───────────────────────────────────────────────────────────────────
 @app.get("/api/coupons/check/{code}")
@@ -308,20 +382,27 @@ class CartRequest(BaseModel):
 
 @app.get("/api/cart/{user_id}")
 async def get_cart_api(user_id: int):
-    items = await get_cart(user_id)
+    user = await resolve_user_by_telegram_id(user_id)
+    items = await get_cart(user.id)
     return [{"id": i.id, "product_id": i.product_id, "quantity": i.quantity, "product": _product_dict(i.product)} for i in items]
 
 @app.post("/api/cart")
 async def add_cart(req: CartRequest):
-    await add_to_cart(req.user_id, req.product_id, req.quantity); return {"ok": True}
+    user = await resolve_user_by_telegram_id(req.user_id)
+    await add_to_cart(user.id, req.product_id, req.quantity)
+    return {"ok": True}
 
 @app.put("/api/cart")
 async def update_cart(req: CartRequest):
-    await update_cart_item(req.user_id, req.product_id, req.quantity); return {"ok": True}
+    user = await resolve_user_by_telegram_id(req.user_id)
+    await update_cart_item(user.id, req.product_id, req.quantity)
+    return {"ok": True}
 
 @app.delete("/api/cart/{user_id}")
 async def clear_cart_api(user_id: int):
-    await clear_cart(user_id); return {"ok": True}
+    user = await resolve_user_by_telegram_id(user_id)
+    await clear_cart(user.id)
+    return {"ok": True}
 
 # ── ORDERS ────────────────────────────────────────────────────────────────────
 class OrderRequest(BaseModel):
@@ -331,7 +412,8 @@ class OrderRequest(BaseModel):
 
 @app.post("/api/orders")
 async def place_order(req: OrderRequest):
-    cart_items = await get_cart(req.user_id)
+    user = await resolve_user_by_telegram_id(req.user_id)
+    cart_items = await get_cart(user.id)
     if not cart_items: raise HTTPException(400, "Cart is empty")
 
     subtotal = sum(i.product.price * i.quantity for i in cart_items)
@@ -351,13 +433,28 @@ async def place_order(req: OrderRequest):
             await use_coupon(req.coupon_code)
 
     order = await create_order(
-        user_id=req.user_id, cart_items=cart_items,
+        user_id=user.id, cart_items=cart_items,
         address=req.address, latitude=req.latitude, longitude=req.longitude,
         comment=req.comment, coupon_code=coupon_code,
         discount_amount=discount_amount, delivery_price=delivery_price,
         distance_km=distance_km
     )
-    await clear_cart(req.user_id)
+    order = await get_order(order.id)
+
+    try:
+        from aiogram import Bot
+        from bot.handlers import send_order_to_group
+        from config import BOT_TOKEN
+
+        bot = Bot(token=BOT_TOKEN)
+        try:
+            await send_order_to_group(bot, order, user)
+        finally:
+            await bot.session.close()
+    except Exception as exc:
+        print(f"Buyurtmani guruhga yuborishda xato: {exc}")
+
+    await clear_cart(user.id)
 
     # Guruhga yuborish (bot instance kerak — webhook orqali)
     # Bot handler dan chaqiriladi: handlers.send_order_to_group(bot, order, user)
@@ -370,7 +467,8 @@ async def place_order(req: OrderRequest):
 
 @app.get("/api/orders/{user_id}")
 async def user_orders(user_id: int):
-    return [_order_dict(o) for o in await get_user_orders(user_id)]
+    user = await resolve_user_by_telegram_id(user_id)
+    return [_order_dict(o) for o in await get_user_orders(user.id)]
 
 @app.get("/api/admin/orders")
 async def admin_orders(
@@ -514,3 +612,17 @@ def _order_dict(o):
                    "product_img": (i.product.images[0] if i.product and i.product.images else None)}
                   for i in o.items]
     }
+
+def _settings_dict(s):
+    return {
+        "shop_name_uz": s.shop_name_uz,
+        "shop_name_ru": s.shop_name_ru,
+        "all_products_title_uz": s.all_products_title_uz,
+        "all_products_title_ru": s.all_products_title_ru,
+        "logo_url": s.logo_url,
+    }
+
+try:
+    app.mount("/", StaticFiles(directory="webapp", html=True), name="webapp")
+except Exception:
+    pass
