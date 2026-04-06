@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Shop</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root {
+  --bg: #f5f5f7;
+  --card: #ffffff;
+  --primary: #5B5BD6;
+  --primary-light: #ededff;
+  --accent: #FF6B35;
+  --text: #1a1a2e;
+  --muted: #8a8a9a;
+  --border: #e8e8f0;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --shadow: 0 2px 16px rgba(91,91,214,0.10);
+  --radius: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+/* ─── NAV BAR ─── */
+.nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: var(--card); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; gap: 10px; }
+.nav-back { width: 36px; height: 36px; border-radius: 50%; background: var(--bg); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; flex-shrink: 0; }
+.nav-title { font-weight: 800; font-size: 17px; flex: 1; }
+.nav-lang { display: flex; gap: 4px; }
+.nav-lang button { padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.nav-lang button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* ─── SEARCH ─── */
+.search-bar { padding: 10px 16px 0; }
+.search-input { width: 100%; padding: 10px 16px 10px 42px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--card); font-size: 14px; font-family: inherit; outline: none; position: relative; }
+.search-wrap { position: relative; }
+.search-wrap::before { content: "🔍"; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 15px; z-index:1; }
+
+/* ─── CATEGORIES ─── */
+.categories-scroll { display: flex; gap: 10px; padding: 12px 16px; overflow-x: auto; scrollbar-width: none; }
+.categories-scroll::-webkit-scrollbar { display: none; }
+.cat-chip { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+.cat-chip-img { width: 58px; height: 58px; border-radius: 50%; object-fit: cover; background: var(--primary-light); border: 2.5px solid transparent; transition: border-color .2s; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.cat-chip.active .cat-chip-img { border-color: var(--primary); }
+.cat-chip-name { font-size: 11px; font-weight: 700; color: var(--muted); text-align: center; max-width: 64px; }
+.cat-chip.active .cat-chip-name { color: var(--primary); }
+
+/* ─── PRODUCT GRID ─── */
+.section-title { font-size: 16px; font-weight: 800; padding: 4px 16px 8px; }
+.products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px 12px; }
+.product-card { background: var(--card); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); cursor: pointer; transition: transform .15s; position: relative; }
+.product-card:active { transform: scale(.97); }
+.product-card-img { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 40px; }
+.product-card-img img { width: 100%; height: 100%; object-fit: cover; }
+.product-card-body { padding: 10px; }
+.product-card-title { font-size: 13px; font-weight: 700; line-height: 1.3; margin-bottom: 6px; }
+.product-price { font-size: 15px; font-weight: 900; color: var(--primary); }
+.product-old-price { font-size: 11px; color: var(--muted); text-decoration: line-through; }
+.add-btn { position: absolute; bottom: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; background: var(--primary); color: #fff; border: none; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(91,91,214,.4); }
+
+/* ─── PRODUCT DETAIL ─── */
+.page { position: fixed; inset: 0; background: var(--bg); z-index: 200; overflow-y: auto; transform: translateX(100%); transition: transform .3s cubic-bezier(.4,0,.2,1); }
+.page.open { transform: translateX(0); }
+.product-images { position: relative; background: var(--card); }
+.product-images-scroll { display: flex; overflow-x: auto; scrollbar-width: none; }
+.product-images-scroll::-webkit-scrollbar { display: none; }
+.product-images-scroll img { width: 100vw; height: 280px; object-fit: cover; flex-shrink: 0; }
+.product-images-dots { display: flex; justify-content: center; gap: 6px; padding: 8px 0; }
+.product-images-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background .2s; }
+.product-images-dots span.active { background: var(--primary); }
+.product-detail-body { padding: 16px; }
+.product-detail-title { font-size: 20px; font-weight: 900; margin-bottom: 6px; }
+.product-detail-price { font-size: 22px; font-weight: 900; color: var(--primary); margin-bottom: 12px; }
+.product-detail-desc { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
+.qty-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.qty-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--bg); border: 1.5px solid var(--border); font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 700; }
+.qty-num { font-size: 18px; font-weight: 800; min-width: 30px; text-align: center; }
+.add-cart-btn { width: 100%; padding: 14px; border-radius: 14px; background: var(--primary); color: #fff; border: none; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.similar-section { padding: 16px; }
+
+/* ─── CART ─── */
+.cart-item { background: var(--card); border-radius: var(--radius); padding: 12px; display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
+.cart-item-img { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; background: var(--primary-light); flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+.cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
+.cart-item-info { flex: 1; }
+.cart-item-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.cart-item-price { font-size: 15px; font-weight: 900; color: var(--primary); }
+.cart-qty-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.cart-qty-btn { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); border: 1px solid var(--border); font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.cart-total { background: var(--card); border-radius: var(--radius); padding: 16px; margin: 0 16px 12px; }
+.cart-total-row { display: flex; justify-content: space-between; align-items: center; }
+.cart-total-label { font-size: 14px; color: var(--muted); }
+.cart-total-value { font-size: 20px; font-weight: 900; color: var(--primary); }
+.checkout-btn { margin: 0 16px 24px; width: calc(100% - 32px); padding: 15px; border-radius: 14px; background: var(--primary); color: #fff; border: none; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; }
+
+/* ─── ORDERS ─── */
+.order-card { background: var(--card); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
+.order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.order-id { font-weight: 800; font-size: 15px; }
+.order-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+.status-pending { background: #fff3cd; color: #856404; }
+.status-confirmed { background: #d1ecf1; color: #0c5460; }
+.status-delivering { background: #cce5ff; color: #004085; }
+.status-delivered { background: #d4edda; color: #155724; }
+.status-cancelled { background: #f8d7da; color: #721c24; }
+.order-items-list { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.order-total { font-weight: 800; font-size: 15px; color: var(--primary); }
+
+/* ─── PROFILE ─── */
+.profile-card { background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; text-align: center; }
+.profile-avatar { width: 72px; height: 72px; border-radius: 50%; background: var(--primary-light); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+.profile-name { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+.profile-phone { font-size: 14px; color: var(--muted); }
+.profile-row { background: var(--card); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.profile-row-icon { font-size: 20px; }
+.profile-row-text { font-size: 15px; font-weight: 600; flex: 1; }
+.profile-row-arrow { color: var(--muted); }
+
+/* ─── MAP ─── */
+#map { height: 280px; border-radius: var(--radius); margin: 12px 16px; }
+.map-address-input { width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 14px; font-family: inherit; outline: none; background: var(--card); margin-bottom: 10px; }
+.confirm-btn { width: calc(100% - 32px); margin: 0 16px 16px; padding: 14px; border-radius: 14px; background: var(--success); color: #fff; border: none; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; }
+
+/* ─── BOTTOM TABS ─── */
+.bottom-tabs { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); display: flex; z-index: 100; padding: env(safe-area-inset-bottom, 0) 0 0; }
+.tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border: none; background: none; cursor: pointer; font-family: inherit; }
+.tab-icon { font-size: 22px; position: relative; }
+.tab-label { font-size: 10px; font-weight: 700; color: var(--muted); }
+.tab-btn.active .tab-label { color: var(--primary); }
+.badge { position: absolute; top: -4px; right: -8px; background: var(--accent); color: #fff; border-radius: 10px; font-size: 10px; font-weight: 800; padding: 1px 5px; min-width: 16px; text-align: center; }
+
+.content-area { padding-top: 112px; padding-bottom: 80px; }
+.page-inner { padding-top: 56px; padding-bottom: 80px; }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+.empty-state .empty-icon { font-size: 56px; margin-bottom: 12px; }
+.empty-state p { font-size: 15px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- ─── MAIN NAV ─── -->
+<div class="nav" id="main-nav">
+  <div class="nav-title" id="nav-title">🛍️ Do'kon</div>
+  <div class="nav-lang">
+    <button id="btn-uz" class="active" onclick="setLang('uz')">🇺🇿 UZ</button>
+    <button id="btn-ru" onclick="setLang('ru')">🇷🇺 RU</button>
+  </div>
+</div>
+
+<!-- ─── MAIN CONTENT ─── -->
+<div class="content-area" id="main-content">
+  <div class="search-wrap search-bar">
+    <input class="search-input" id="search-input" placeholder="Qidirish..." oninput="onSearch(this.value)" />
+  </div>
+  <div class="categories-scroll" id="categories-scroll"></div>
+  <div class="section-title" id="section-title">Barcha mahsulotlar</div>
+  <div class="products-grid" id="products-grid"></div>
+</div>
+
+<!-- ─── PRODUCT DETAIL PAGE ─── -->
+<div class="page" id="page-product">
+  <div class="nav">
+    <button class="nav-back" onclick="closePage('page-product')">←</button>
+    <div class="nav-title" id="product-nav-title">Mahsulot</div>
+  </div>
+  <div class="page-inner" id="product-detail-inner"></div>
+</div>
+
+<!-- ─── CART PAGE ─── -->
+<div class="page" id="page-cart">
+  <div class="nav">
+    <button class="nav-back" onclick="closePage('page-cart')">←</button>
+    <div class="nav-title" id="cart-nav-title">🛒 Savatcha</div>
+  </div>
+  <div class="page-inner" id="cart-inner"></div>
+</div>
+
+<!-- ─── ORDERS PAGE ─── -->
+<div class="page" id="page-orders">
+  <div class="nav">
+    <button class="nav-back" onclick="closePage('page-orders')">←</button>
+    <div class="nav-title">📋 Buyurtmalar</div>
+  </div>
+  <div class="page-inner" id="orders-inner"></div>
+</div>
+
+<!-- ─── PROFILE PAGE ─── -->
+<div class="page" id="page-profile">
+  <div class="nav">
+    <button class="nav-back" onclick="closePage('page-profile')">←</button>
+    <div class="nav-title">👤 Profil</div>
+  </div>
+  <div class="page-inner" id="profile-inner"></div>
+</div>
+
+<!-- ─── CHECKOUT / MAP PAGE ─── -->
+<div class="page" id="page-checkout">
+  <div class="nav">
+    <button class="nav-back" onclick="closePage('page-checkout')">←</button>
+    <div class="nav-title" id="checkout-nav-title">📍 Manzil tanlash</div>
+  </div>
+  <div class="page-inner">
+    <div style="padding: 12px 16px 0; font-size: 14px; color: var(--muted);" id="map-hint">Xaritada buyurtma manzilini tanlang</div>
+    <div id="map"></div>
+    <div style="padding: 0 16px 8px;">
+      <input class="map-address-input" id="map-address" placeholder="Manzil..." readonly />
+      <textarea style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:inherit;outline:none;resize:none;background:var(--card);margin-bottom:8px;" id="order-comment" placeholder="Izoh (ixtiyoriy)..." rows="2"></textarea>
+    </div>
+    <button class="confirm-btn" id="confirm-order-btn" onclick="confirmOrder()">✅ Buyurtmani tasdiqlash</button>
+  </div>
+</div>
+
+<!-- ─── BOTTOM TABS ─── -->
+<div class="bottom-tabs">
+  <button class="tab-btn active" id="tab-home" onclick="switchTab('home')">
+    <div class="tab-icon">🏠</div>
+    <div class="tab-label" id="tab-label-home">Asosiy</div>
+  </button>
+  <button class="tab-btn" id="tab-cart" onclick="switchTab('cart')">
+    <div class="tab-icon">🛒<span class="badge" id="cart-badge" style="display:none">0</span></div>
+    <div class="tab-label" id="tab-label-cart">Savat</div>
+  </button>
+  <button class="tab-btn" id="tab-orders" onclick="switchTab('orders')">
+    <div class="tab-icon">📋</div>
+    <div class="tab-label" id="tab-label-orders">Buyurtmalar</div>
+  </button>
+  <button class="tab-btn" id="tab-profile" onclick="switchTab('profile')">
+    <div class="tab-icon">👤</div>
+    <div class="tab-label" id="tab-label-profile">Profil</div>
+  </button>
+</div>
+
+<script>
+const API = '';  // same origin
+const tg = window.Telegram?.WebApp;
+tg?.expand();
+tg?.setHeaderColor('#5B5BD6');
+
+let lang = 'uz';
+let userId = null;
+let userData = null;
+let cartCount = 0;
+let selectedCategoryId = null;
+let mapInstance = null;
+let selectedLat = null;
+let selectedLng = null;
+let selectedAddress = '';
+let currentProduct = null;
+let currentQty = 1;
+
+const T = {
+  uz: {
+    home: 'Asosiy', cart: 'Savat', orders: 'Buyurtmalar', profile: 'Profil',
+    search: 'Qidirish...', all_products: 'Barcha mahsulotlar',
+    add_cart: 'Savatga qo\'shish', similar: 'O\'xshash mahsulotlar',
+    cart_empty: 'Savatcha bo\'sh', orders_empty: 'Buyurtmalar yo\'q',
+    total: 'Jami:', checkout: '📍 Buyurtma berish',
+    map_hint: 'Xaritada manzilni tanlang', confirm_order: '✅ Buyurtmani tasdiqlash',
+    name: 'Ism', phone: 'Telefon', my_orders: 'Mening buyurtmalarim',
+    status: { pending: '⏳ Kutilmoqda', confirmed: '✅ Tasdiqlandi', delivering: '🚚 Yetkazilmoqda', delivered: '📦 Yetkazildi', cancelled: '❌ Bekor qilindi' }
+  },
+  ru: {
+    home: 'Главная', cart: 'Корзина', orders: 'Заказы', profile: 'Профиль',
+    search: 'Поиск...', all_products: 'Все товары',
+    add_cart: 'В корзину', similar: 'Похожие товары',
+    cart_empty: 'Корзина пуста', orders_empty: 'Заказов нет',
+    total: 'Итого:', checkout: '📍 Оформить заказ',
+    map_hint: 'Выберите адрес на карте', confirm_order: '✅ Подтвердить заказ',
+    name: 'Имя', phone: 'Телефон', my_orders: 'Мои заказы',
+    status: { pending: '⏳ Ожидание', confirmed: '✅ Подтверждён', delivering: '🚚 Доставляется', delivered: '📦 Доставлен', cancelled: '❌ Отменён' }
+  }
+};
+
+function t(key) { return T[lang][key] || key; }
+function title(p) { return lang === 'uz' ? p.title_uz : p.title_ru; }
+function desc(p) { return lang === 'uz' ? p.description_uz : p.description_ru; }
+function catName(c) { return lang === 'uz' ? c.name_uz : c.name_ru; }
+
+async function init() {
+  const tgUser = tg?.initDataUnsafe?.user;
+  if (tgUser) {
+    userId = tgUser.id;
+    try {
+      const res = await fetch(`${API}/api/users/${userId}`);
+      if (res.ok) {
+        userData = await res.json();
+        lang = userData.language || 'uz';
+      }
+    } catch(e) {}
+  }
+  updateLangUI();
+  await loadCategories();
+  await loadProducts();
+  await updateCartBadge();
+}
+
+function setLang(l) {
+  lang = l;
+  updateLangUI();
+  loadCategories();
+  loadProducts(selectedCategoryId);
+  if (userId) fetch(`${API}/api/users/${userId}/language?lang=${l}`, { method: 'PUT' });
+}
+
+function updateLangUI() {
+  document.getElementById('btn-uz').className = lang === 'uz' ? 'active' : '';
+  document.getElementById('btn-ru').className = lang === 'ru' ? 'active' : '';
+  document.getElementById('search-input').placeholder = t('search');
+  ['home','cart','orders','profile'].forEach(k => {
+    document.getElementById(`tab-label-${k}`).textContent = t(k);
+  });
+}
+
+async function loadCategories() {
+  const res = await fetch(`${API}/api/categories`);
+  const cats = await res.json();
+  const el = document.getElementById('categories-scroll');
+  el.innerHTML = `<div class="cat-chip ${!selectedCategoryId ? 'active' : ''}" onclick="filterByCategory(null)">
+    <div class="cat-chip-img">🛍️</div>
+    <div class="cat-chip-name">${lang === 'uz' ? 'Barchasi' : 'Все'}</div>
+  </div>` + cats.map(c => `
+    <div class="cat-chip ${selectedCategoryId === c.id ? 'active' : ''}" onclick="filterByCategory(${c.id})">
+      <div class="cat-chip-img">${c.image_url ? `<img src="${c.image_url}" onerror="this.parentNode.textContent='🗂️'"/>` : '🗂️'}</div>
+      <div class="cat-chip-name">${catName(c)}</div>
+    </div>`).join('');
+}
+
+async function loadProducts(categoryId = null, search = '') {
+  let url = `${API}/api/products?`;
+  if (categoryId) url += `category_id=${categoryId}&`;
+  if (search) url += `search=${encodeURIComponent(search)}&`;
+  const res = await fetch(url);
+  const products = await res.json();
+  renderProducts(products);
+}
+
+function renderProducts(products) {
+  const grid = document.getElementById('products-grid');
+  if (!products.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;" class="empty-state"><div class="empty-icon">🔍</div><p>${lang === 'uz' ? 'Mahsulot topilmadi' : 'Товары не найдены'}</p></div>`;
+    return;
+  }
+  grid.innerHTML = products.map(p => `
+    <div class="product-card" onclick="openProduct(${p.id})">
+      <div class="product-card-img">${p.images && p.images[0] ? `<img src="${p.images[0]}" onerror="this.parentNode.innerHTML='🛍️'"/>` : '🛍️'}</div>
+      <div class="product-card-body">
+        <div class="product-card-title">${title(p)}</div>
+        <div class="product-price">${p.price.toLocaleString()} so'm</div>
+        ${p.old_price ? `<div class="product-old-price">${p.old_price.toLocaleString()} so'm</div>` : ''}
+      </div>
+      <button class="add-btn" onclick="event.stopPropagation();quickAdd(${p.id})">+</button>
+    </div>`).join('');
+}
+
+function filterByCategory(id) {
+  selectedCategoryId = id;
+  loadCategories();
+  loadProducts(id);
+  document.getElementById('section-title').textContent = t('all_products');
+}
+
+let searchTimer;
+function onSearch(val) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadProducts(selectedCategoryId, val), 350);
+}
+
+async function openProduct(id) {
+  const p = await (await fetch(`${API}/api/products/${id}`)).json();
+  currentProduct = p;
+  currentQty = 1;
+  const inner = document.getElementById('product-detail-inner');
+  const imgs = p.images && p.images.length ? p.images : [];
+  inner.innerHTML = `
+    <div class="product-images">
+      <div class="product-images-scroll" id="prod-img-scroll">
+        ${imgs.length ? imgs.map(img => `<img src="${img}" onerror="this.src='data:image/svg+xml,<svg/>'"/>`).join('') : '<div style="width:100vw;height:280px;display:flex;align-items:center;justify-content:center;font-size:80px;background:#ededff;">🛍️</div>'}
+      </div>
+      ${imgs.length > 1 ? `<div class="product-images-dots">${imgs.map((_,i) => `<span class="${i===0?'active':''}"></span>`).join('')}</div>` : ''}
+    </div>
+    <div class="product-detail-body">
+      <div class="product-detail-title">${title(p)}</div>
+      <div class="product-detail-price">${p.price.toLocaleString()} so'm ${p.old_price ? `<span style="font-size:14px;color:var(--muted);text-decoration:line-through">${p.old_price.toLocaleString()}</span>` : ''}</div>
+      <div class="product-detail-desc">${desc(p) || ''}</div>
+      <div class="qty-row">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <div class="qty-num" id="qty-display">1</div>
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+      <button class="add-cart-btn" onclick="addToCart(${p.id})">${t('add_cart')}</button>
+    </div>
+    <div class="similar-section" id="similar-section"></div>`;
+
+  document.getElementById('product-nav-title').textContent = title(p);
+  openPage('page-product');
+
+  // Image dots scroll
+  if (imgs.length > 1) {
+    const scroll = document.getElementById('prod-img-scroll');
+    const dots = document.querySelectorAll('.product-images-dots span');
+    scroll.addEventListener('scroll', () => {
+      const idx = Math.round(scroll.scrollLeft / window.innerWidth);
+      dots.forEach((d,i) => d.className = i === idx ? 'active' : '');
+    });
+  }
+
+  // Similar products
+  const similar = await (await fetch(`${API}/api/products/${id}/similar?category_id=${p.category_id}`)).json();
+  if (similar.length) {
+    document.getElementById('similar-section').innerHTML = `
+      <div class="section-title">${t('similar')}</div>
+      <div class="products-grid">${similar.map(s => `
+        <div class="product-card" onclick="openProduct(${s.id})">
+          <div class="product-card-img">${s.images && s.images[0] ? `<img src="${s.images[0]}"/>` : '🛍️'}</div>
+          <div class="product-card-body">
+            <div class="product-card-title">${title(s)}</div>
+            <div class="product-price">${s.price.toLocaleString()} so'm</div>
+          </div>
+        </div>`).join('')}</div>`;
+  }
+}
+
+function changeQty(d) {
+  currentQty = Math.max(1, currentQty + d);
+  document.getElementById('qty-display').textContent = currentQty;
+}
+
+async function addToCart(pid) {
+  if (!userId) return alert('Telegram orqali kiring!');
+  await fetch(`${API}/api/cart`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({user_id: userId, product_id: pid, quantity: currentQty}) });
+  tg?.HapticFeedback?.impactOccurred('light');
+  await updateCartBadge();
+  closePage('page-product');
+}
+
+async function quickAdd(pid) {
+  if (!userId) return;
+  await fetch(`${API}/api/cart`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({user_id: userId, product_id: pid, quantity: 1}) });
+  tg?.HapticFeedback?.impactOccurred('light');
+  await updateCartBadge();
+}
+
+async function updateCartBadge() {
+  if (!userId) return;
+  const items = await (await fetch(`${API}/api/cart/${userId}`)).json();
+  cartCount = items.reduce((s,i) => s + i.quantity, 0);
+  const badge = document.getElementById('cart-badge');
+  badge.textContent = cartCount;
+  badge.style.display = cartCount > 0 ? '' : 'none';
+}
+
+async function loadCart() {
+  const inner = document.getElementById('cart-inner');
+  if (!userId) { inner.innerHTML = `<div class="empty-state"><div class="empty-icon">🛒</div><p>${t('cart_empty')}</p></div>`; return; }
+  const items = await (await fetch(`${API}/api/cart/${userId}`)).json();
+  if (!items.length) { inner.innerHTML = `<div class="empty-state"><div class="empty-icon">🛒</div><p>${t('cart_empty')}</p></div>`; return; }
+  const total = items.reduce((s,i) => s + i.product.price * i.quantity, 0);
+  inner.innerHTML = `<div style="padding:12px 16px 0">${items.map(i => `
+    <div class="cart-item">
+      <div class="cart-item-img">${i.product.images && i.product.images[0] ? `<img src="${i.product.images[0]}"/>` : '🛍️'}</div>
+      <div class="cart-item-info">
+        <div class="cart-item-title">${title(i.product)}</div>
+        <div class="cart-item-price">${(i.product.price * i.quantity).toLocaleString()} so'm</div>
+        <div class="cart-qty-row">
+          <button class="cart-qty-btn" onclick="updateQty(${i.product_id}, ${i.quantity - 1})">−</button>
+          <span style="font-weight:700">${i.quantity}</span>
+          <button class="cart-qty-btn" onclick="updateQty(${i.product_id}, ${i.quantity + 1})">+</button>
+        </div>
+      </div>
+    </div>`).join('')}</div>
+  <div class="cart-total">
+    <div class="cart-total-row">
+      <span class="cart-total-label">${t('total')}</span>
+      <span class="cart-total-value">${total.toLocaleString()} so'm</span>
+    </div>
+  </div>
+  <button class="checkout-btn" onclick="openCheckout()">${t('checkout')}</button>`;
+}
+
+async function updateQty(pid, qty) {
+  await fetch(`${API}/api/cart`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({user_id: userId, product_id: pid, quantity: qty}) });
+  await updateCartBadge();
+  await loadCart();
+}
+
+async function loadOrders() {
+  const inner = document.getElementById('orders-inner');
+  if (!userId) { inner.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><p>${t('orders_empty')}</p></div>`; return; }
+  const orders = await (await fetch(`${API}/api/orders/${userId}`)).json();
+  if (!orders.length) { inner.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><p>${t('orders_empty')}</p></div>`; return; }
+  inner.innerHTML = `<div style="padding:12px 16px 0">${orders.map(o => `
+    <div class="order-card">
+      <div class="order-header">
+        <div class="order-id">#${o.id}</div>
+        <div class="order-badge status-${o.status}">${t('status')[o.status] || o.status}</div>
+      </div>
+      <div class="order-items-list">${o.items.map(i => `${i.product_title} x${i.quantity}`).join(', ')}</div>
+      <div class="order-total">${o.total_price.toLocaleString()} so'm</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">${new Date(o.created_at).toLocaleDateString()}</div>
+    </div>`).join('')}</div>`;
+}
+
+function loadProfile() {
+  const inner = document.getElementById('profile-inner');
+  const u = userData;
+  inner.innerHTML = `
+    <div style="padding:16px">
+      <div class="profile-card">
+        <div class="profile-avatar">👤</div>
+        <div class="profile-name">${u?.full_name || 'Foydalanuvchi'}</div>
+        <div class="profile-phone">${u?.phone || ''}</div>
+      </div>
+      <div class="profile-row" onclick="switchTab('orders')">
+        <div class="profile-row-icon">📋</div>
+        <div class="profile-row-text">${t('my_orders')}</div>
+        <div class="profile-row-arrow">›</div>
+      </div>
+      <div class="profile-row" onclick="changeLangPrompt()">
+        <div class="profile-row-icon">🌐</div>
+        <div class="profile-row-text">${lang === 'uz' ? "O'zbek tili" : 'Русский язык'}</div>
+        <div class="profile-row-arrow">›</div>
+      </div>
+    </div>`;
+}
+
+function changeLangPrompt() {
+  const next = lang === 'uz' ? 'ru' : 'uz';
+  setLang(next);
+  loadProfile();
+}
+
+function openCheckout() {
+  document.getElementById('checkout-nav-title').textContent = t('map_hint');
+  document.getElementById('map-hint').textContent = t('map_hint');
+  document.getElementById('confirm-order-btn').textContent = t('confirm_order');
+  openPage('page-checkout');
+  setTimeout(initMap, 300);
+}
+
+function initMap() {
+  if (mapInstance) { mapInstance.invalidateSize(); return; }
+  mapInstance = L.map('map').setView([41.299496, 69.240073], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance);
+  let marker;
+  mapInstance.on('click', async e => {
+    selectedLat = e.latlng.lat;
+    selectedLng = e.latlng.lng;
+    if (marker) marker.setLatLng(e.latlng);
+    else marker = L.marker(e.latlng).addTo(mapInstance);
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${selectedLat}&lon=${selectedLng}&format=json`);
+      const data = await r.json();
+      selectedAddress = data.display_name || `${selectedLat.toFixed(4)}, ${selectedLng.toFixed(4)}`;
+    } catch { selectedAddress = `${selectedLat.toFixed(4)}, ${selectedLng.toFixed(4)}`; }
+    document.getElementById('map-address').value = selectedAddress;
+  });
+}
+
+async function confirmOrder() {
+  if (!selectedLat) return alert(lang === 'uz' ? 'Xaritada manzil tanlang!' : 'Выберите адрес на карте!');
+  const comment = document.getElementById('order-comment').value;
+  const res = await fetch(`${API}/api/orders`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ user_id: userId, address: selectedAddress, latitude: selectedLat, longitude: selectedLng, comment }) });
+  if (res.ok) {
+    tg?.HapticFeedback?.notificationOccurred('success');
+    closePage('page-checkout');
+    closePage('page-cart');
+    await updateCartBadge();
+    switchTab('orders');
+    alert(lang === 'uz' ? '✅ Buyurtma qabul qilindi!' : '✅ Заказ принят!');
+  }
+}
+
+function openPage(id) { document.getElementById(id).classList.add('open'); }
+function closePage(id) { document.getElementById(id).classList.remove('open'); }
+
+function switchTab(tab) {
+  ['home','cart','orders','profile'].forEach(t => document.getElementById(`tab-${t}`).className = 'tab-btn');
+  document.getElementById(`tab-${tab}`).className = 'tab-btn active';
+  if (tab === 'cart') { openPage('page-cart'); loadCart(); }
+  else if (tab === 'orders') { openPage('page-orders'); loadOrders(); }
+  else if (tab === 'profile') { openPage('page-profile'); loadProfile(); }
+  else { ['page-cart','page-orders','page-profile'].forEach(closePage); }
+}
+
+init();
+</script>
+</body>
+</html>

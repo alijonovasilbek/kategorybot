@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #f0f0f7; --card: #fff; --primary: #5B5BD6; --accent: #FF6B35;
+  --success: #22c55e; --danger: #ef4444; --text: #1a1a2e; --muted: #8a8a9a;
+  --border: #e8e8f0; --radius: 14px; --shadow: 0 2px 12px rgba(91,91,214,.10);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); }
+.admin-layout { display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: var(--primary); color: #fff; padding: 24px 0; position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 100; }
+.sidebar-logo { padding: 0 20px 24px; font-size: 20px; font-weight: 900; border-bottom: 1px solid rgba(255,255,255,.15); margin-bottom: 16px; }
+.sidebar-item { padding: 12px 20px; cursor: pointer; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 10px; border-radius: 0; transition: background .15s; }
+.sidebar-item:hover, .sidebar-item.active { background: rgba(255,255,255,.15); }
+.main-area { margin-left: 220px; padding: 28px; flex: 1; }
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.page-title { font-size: 22px; font-weight: 900; }
+.btn { padding: 10px 20px; border-radius: 10px; border: none; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity .15s; }
+.btn:hover { opacity: .85; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
+table { width: 100%; border-collapse: collapse; }
+th { background: var(--bg); font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--muted); padding: 10px 12px; text-align: left; }
+td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+.product-img-thumb { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: var(--bg); }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.badge-green { background: #d4edda; color: #155724; }
+.badge-red { background: #f8d7da; color: #721c24; }
+.badge-blue { background: #cce5ff; color: #004085; }
+.badge-yellow { background: #fff3cd; color: #856404; }
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--card); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
+.modal-title { font-size: 18px; font-weight: 900; margin-bottom: 20px; }
+.form-group { margin-bottom: 16px; }
+label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--muted); }
+input[type=text], input[type=number], textarea, select { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; outline: none; background: var(--bg); transition: border-color .15s; }
+input:focus, textarea:focus, select:focus { border-color: var(--primary); }
+textarea { resize: vertical; min-height: 80px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.img-preview-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.img-preview { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background: var(--bg); position: relative; }
+.img-preview-wrap { position: relative; }
+.img-remove { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--danger); color: #fff; border: none; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: var(--card); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+.stat-icon { font-size: 28px; margin-bottom: 8px; }
+.stat-value { font-size: 28px; font-weight: 900; color: var(--primary); }
+.stat-label { font-size: 13px; color: var(--muted); font-weight: 600; }
+.hidden { display: none; }
+@media (max-width: 768px) {
+  .sidebar { width: 60px; }
+  .sidebar-logo, .sidebar-item span { display: none; }
+  .main-area { margin-left: 60px; padding: 16px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">⚙️ <span>Admin</span></div>
+    <div class="sidebar-item active" onclick="showSection('dashboard')">📊 <span>Dashboard</span></div>
+    <div class="sidebar-item" onclick="showSection('categories')">🗂️ <span>Kategoriyalar</span></div>
+    <div class="sidebar-item" onclick="showSection('products')">📦 <span>Mahsulotlar</span></div>
+    <div class="sidebar-item" onclick="showSection('orders')">📋 <span>Buyurtmalar</span></div>
+    <div class="sidebar-item" onclick="showSection('users')">👥 <span>Foydalanuvchilar</span></div>
+  </aside>
+
+  <main class="main-area">
+    <!-- DASHBOARD -->
+    <div id="section-dashboard">
+      <div class="page-header"><div class="page-title">📊 Dashboard</div></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="stat-users">—</div><div class="stat-label">Foydalanuvchilar</div></div>
+        <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="stat-products">—</div><div class="stat-label">Mahsulotlar</div></div>
+        <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value" id="stat-orders">—</div><div class="stat-label">Buyurtmalar</div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="stat-revenue">—</div><div class="stat-label">Daromad</div></div>
+      </div>
+      <div class="card"><div style="font-weight:800;margin-bottom:12px">So'nggi buyurtmalar</div><div id="recent-orders-table"></div></div>
+    </div>
+
+    <!-- CATEGORIES -->
+    <div id="section-categories" class="hidden">
+      <div class="page-header">
+        <div class="page-title">🗂️ Kategoriyalar</div>
+        <button class="btn btn-primary" onclick="openCatModal()">+ Qo'shish</button>
+      </div>
+      <div class="card"><table><thead><tr><th>Rasm</th><th>Nomi (UZ)</th><th>Nomi (RU)</th><th>Amallar</th></tr></thead><tbody id="categories-table"></tbody></table></div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div id="section-products" class="hidden">
+      <div class="page-header">
+        <div class="page-title">📦 Mahsulotlar</div>
+        <button class="btn btn-primary" onclick="openProductModal()">+ Qo'shish</button>
+      </div>
+      <div class="card"><table><thead><tr><th>Rasm</th><th>Nomi</th><th>Kategoriya</th><th>Narx</th><th>Sklad</th><th>Amallar</th></tr></thead><tbody id="products-table"></tbody></table></div>
+    </div>
+
+    <!-- ORDERS -->
+    <div id="section-orders" class="hidden">
+      <div class="page-header"><div class="page-title">📋 Buyurtmalar</div></div>
+      <div class="card"><table><thead><tr><th>#</th><th>Mijoz</th><th>Mahsulotlar</th><th>Summa</th><th>Status</th><th>Sana</th><th>Amal</th></tr></thead><tbody id="orders-table"></tbody></table></div>
+    </div>
+
+    <!-- USERS -->
+    <div id="section-users" class="hidden">
+      <div class="page-header"><div class="page-title">👥 Foydalanuvchilar</div></div>
+      <div class="card"><table><thead><tr><th>ID</th><th>Ism</th><th>Telefon</th><th>Til</th><th>Holat</th></tr></thead><tbody id="users-table"></tbody></table></div>
+    </div>
+  </main>
+</div>
+
+<!-- CATEGORY MODAL -->
+<div class="modal-overlay" id="cat-modal">
+  <div class="modal">
+    <div class="modal-title" id="cat-modal-title">Kategoriya qo'shish</div>
+    <input type="hidden" id="cat-edit-id"/>
+    <div class="form-group"><label>Nomi (O'zbek)</label><input type="text" id="cat-name-uz" placeholder="Kategoriya nomi UZ"/></div>
+    <div class="form-group"><label>Nomi (Ruscha)</label><input type="text" id="cat-name-ru" placeholder="Kategoriya nomi RU"/></div>
+    <div class="form-group"><label>Rasm</label><input type="file" id="cat-image" accept="image/*" onchange="previewCatImage(this)"/><div id="cat-image-preview" class="img-preview-grid"></div></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeCatModal()">Bekor</button>
+      <button class="btn btn-primary" onclick="saveCategory()">Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="modal-overlay" id="product-modal">
+  <div class="modal">
+    <div class="modal-title" id="product-modal-title">Mahsulot qo'shish</div>
+    <input type="hidden" id="product-edit-id"/>
+    <div class="form-row">
+      <div class="form-group"><label>Nomi (UZ)</label><input type="text" id="p-title-uz" placeholder="Mahsulot nomi UZ"/></div>
+      <div class="form-group"><label>Nomi (RU)</label><input type="text" id="p-title-ru" placeholder="Mahsulot nomi RU"/></div>
+    </div>
+    <div class="form-group"><label>Tavsif (UZ)</label><textarea id="p-desc-uz" placeholder="Mahsulot tavsifi..."></textarea></div>
+    <div class="form-group"><label>Tavsif (RU)</label><textarea id="p-desc-ru" placeholder="Описание товара..."></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Narx (so'm)</label><input type="number" id="p-price" placeholder="0"/></div>
+      <div class="form-group"><label>Eski narx (ixtiyoriy)</label><input type="number" id="p-old-price" placeholder="0"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Kategoriya</label><select id="p-category"></select></div>
+      <div class="form-group"><label>Sklad soni</label><input type="number" id="p-stock" value="100"/></div>
+    </div>
+    <div class="form-group">
+      <label>Rasmlar (max 4 ta)</label>
+      <input type="file" id="p-images" accept="image/*" multiple onchange="previewProductImages(this)"/>
+      <div id="p-images-preview" class="img-preview-grid"></div>
+      <input type="hidden" id="p-existing-images" value="[]"/>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeProductModal()">Bekor</button>
+      <button class="btn btn-primary" onclick="saveProduct()">Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '..';
+let allCategories = [];
+let editingCatId = null;
+let editingProductId = null;
+let newProductImages = [];
+let existingProductImages = [];
+
+async function init() {
+  await loadDashboard();
+}
+
+function showSection(name) {
+  ['dashboard','categories','products','orders','users'].forEach(s => {
+    document.getElementById(`section-${s}`).className = s === name ? '' : 'hidden';
+  });
+  document.querySelectorAll('.sidebar-item').forEach((el,i) => {
+    el.className = 'sidebar-item' + (['dashboard','categories','products','orders','users'][i] === name ? ' active' : '');
+  });
+  if (name === 'categories') loadCategoriesTable();
+  if (name === 'products') loadProductsTable();
+  if (name === 'orders') loadOrdersTable();
+  if (name === 'users') loadUsersTable();
+}
+
+async function loadDashboard() {
+  const [users, products, orders] = await Promise.all([
+    fetch(`${API}/api/admin/users`).then(r=>r.json()),
+    fetch(`${API}/api/products/all`).then(r=>r.json()),
+    fetch(`${API}/api/admin/orders`).then(r=>r.json()),
+  ]);
+  document.getElementById('stat-users').textContent = users.length;
+  document.getElementById('stat-products').textContent = products.length;
+  document.getElementById('stat-orders').textContent = orders.length;
+  const revenue = orders.filter(o=>o.status==='delivered').reduce((s,o)=>s+o.total_price,0);
+  document.getElementById('stat-revenue').textContent = revenue.toLocaleString();
+  const recent = orders.slice(0,5);
+  document.getElementById('recent-orders-table').innerHTML = `<table><thead><tr><th>#</th><th>Mijoz</th><th>Summa</th><th>Status</th></tr></thead><tbody>${recent.map(o=>`<tr><td>#${o.id}</td><td>${o.user?.full_name||'—'}</td><td>${o.total_price.toLocaleString()} so'm</td><td><span class="badge badge-${statusColor(o.status)}">${statusText(o.status)}</span></td></tr>`).join('')}</tbody></table>`;
+}
+
+// ── CATEGORIES ──
+async function loadCategoriesTable() {
+  const cats = await fetch(`${API}/api/categories/all`).then(r=>r.json());
+  allCategories = cats;
+  document.getElementById('categories-table').innerHTML = cats.map(c => `
+    <tr>
+      <td>${c.image_url ? `<img class="product-img-thumb" src="${API}${c.image_url}"/>` : '—'}</td>
+      <td><strong>${c.name_uz}</strong></td>
+      <td>${c.name_ru}</td>
+      <td>
+        <button class="btn btn-sm btn-primary" onclick="openCatModal(${JSON.stringify(c).replace(/"/g,'&quot;')})">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteCat(${c.id})" style="margin-left:6px">🗑️</button>
+      </td>
+    </tr>`).join('');
+}
+
+function openCatModal(cat=null) {
+  editingCatId = cat ? cat.id : null;
+  document.getElementById('cat-modal-title').textContent = cat ? 'Kategoriya tahrirlash' : 'Kategoriya qo\'shish';
+  document.getElementById('cat-edit-id').value = cat ? cat.id : '';
+  document.getElementById('cat-name-uz').value = cat ? cat.name_uz : '';
+  document.getElementById('cat-name-ru').value = cat ? cat.name_ru : '';
+  document.getElementById('cat-image-preview').innerHTML = cat && cat.image_url ? `<div class="img-preview-wrap"><img class="img-preview" src="${API}${cat.image_url}"/></div>` : '';
+  document.getElementById('cat-modal').classList.add('open');
+}
+function closeCatModal() { document.getElementById('cat-modal').classList.remove('open'); }
+
+function previewCatImage(input) {
+  const preview = document.getElementById('cat-image-preview');
+  if (input.files[0]) {
+    const url = URL.createObjectURL(input.files[0]);
+    preview.innerHTML = `<div class="img-preview-wrap"><img class="img-preview" src="${url}"/></div>`;
+  }
+}
+
+async function saveCategory() {
+  const fd = new FormData();
+  fd.append('name_uz', document.getElementById('cat-name-uz').value);
+  fd.append('name_ru', document.getElementById('cat-name-ru').value);
+  const img = document.getElementById('cat-image').files[0];
+  if (img) fd.append('image', img);
+  if (editingCatId) {
+    await fetch(`${API}/api/categories/${editingCatId}`, { method: 'PUT', body: fd });
+  } else {
+    await fetch(`${API}/api/categories`, { method: 'POST', body: fd });
+  }
+  closeCatModal();
+  loadCategoriesTable();
+}
+
+async function deleteCat(id) {
+  if (!confirm('Haqiqatan o\'chirmoqchimisiz?')) return;
+  await fetch(`${API}/api/categories/${id}`, { method: 'DELETE' });
+  loadCategoriesTable();
+}
+
+// ── PRODUCTS ──
+async function loadProductsTable() {
+  if (!allCategories.length) allCategories = await fetch(`${API}/api/categories/all`).then(r=>r.json());
+  const products = await fetch(`${API}/api/products/all`).then(r=>r.json());
+  document.getElementById('products-table').innerHTML = products.map(p => {
+    const cat = allCategories.find(c=>c.id===p.category_id);
+    return `<tr>
+      <td>${p.images && p.images[0] ? `<img class="product-img-thumb" src="${API}${p.images[0]}"/>` : '—'}</td>
+      <td><strong>${p.title_uz}</strong></td>
+      <td>${cat ? cat.name_uz : '—'}</td>
+      <td>${p.price.toLocaleString()} so'm</td>
+      <td>${p.stock}</td>
+      <td>
+        <button class="btn btn-sm btn-primary" onclick='openProductModal(${JSON.stringify(p)})'>✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})" style="margin-left:6px">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function openProductModal(product=null) {
+  editingProductId = product ? product.id : null;
+  newProductImages = [];
+  existingProductImages = product ? (product.images || []) : [];
+  if (!allCategories.length) allCategories = await fetch(`${API}/api/categories/all`).then(r=>r.json());
+  document.getElementById('product-modal-title').textContent = product ? 'Mahsulot tahrirlash' : 'Mahsulot qo\'shish';
+  document.getElementById('p-title-uz').value = product ? product.title_uz : '';
+  document.getElementById('p-title-ru').value = product ? product.title_ru : '';
+  document.getElementById('p-desc-uz').value = product ? (product.description_uz||'') : '';
+  document.getElementById('p-desc-ru').value = product ? (product.description_ru||'') : '';
+  document.getElementById('p-price').value = product ? product.price : '';
+  document.getElementById('p-old-price').value = product ? (product.old_price||'') : '';
+  document.getElementById('p-stock').value = product ? product.stock : 100;
+  document.getElementById('p-category').innerHTML = allCategories.map(c => `<option value="${c.id}" ${product && product.category_id===c.id?'selected':''}>${c.name_uz}</option>`).join('');
+  renderProductImagePreviews();
+  document.getElementById('p-images').value = '';
+  document.getElementById('product-modal').classList.add('open');
+}
+function closeProductModal() { document.getElementById('product-modal').classList.remove('open'); }
+
+function previewProductImages(input) {
+  for (const file of input.files) {
+    if (existingProductImages.length + newProductImages.length < 4) {
+      newProductImages.push(file);
+    }
+  }
+  renderProductImagePreviews();
+}
+
+function renderProductImagePreviews() {
+  const container = document.getElementById('p-images-preview');
+  let html = existingProductImages.map((url,i) => `
+    <div class="img-preview-wrap">
+      <img class="img-preview" src="${API}${url}"/>
+      <button class="img-remove" onclick="removeExistingImg(${i})">×</button>
+    </div>`).join('');
+  html += newProductImages.map((f,i) => `
+    <div class="img-preview-wrap">
+      <img class="img-preview" src="${URL.createObjectURL(f)}"/>
+      <button class="img-remove" onclick="removeNewImg(${i})">×</button>
+    </div>`).join('');
+  container.innerHTML = html;
+  document.getElementById('p-existing-images').value = JSON.stringify(existingProductImages);
+}
+
+function removeExistingImg(i) { existingProductImages.splice(i,1); renderProductImagePreviews(); }
+function removeNewImg(i) { newProductImages.splice(i,1); renderProductImagePreviews(); }
+
+async function saveProduct() {
+  const fd = new FormData();
+  fd.append('title_uz', document.getElementById('p-title-uz').value);
+  fd.append('title_ru', document.getElementById('p-title-ru').value);
+  fd.append('description_uz', document.getElementById('p-desc-uz').value);
+  fd.append('description_ru', document.getElementById('p-desc-ru').value);
+  fd.append('price', document.getElementById('p-price').value);
+  const oldPrice = document.getElementById('p-old-price').value;
+  if (oldPrice) fd.append('old_price', oldPrice);
+  fd.append('category_id', document.getElementById('p-category').value);
+  fd.append('stock', document.getElementById('p-stock').value);
+  fd.append('existing_images', JSON.stringify(existingProductImages));
+  for (const f of newProductImages) fd.append('images', f);
+  if (editingProductId) {
+    await fetch(`${API}/api/products/${editingProductId}`, { method: 'PUT', body: fd });
+  } else {
+    await fetch(`${API}/api/products`, { method: 'POST', body: fd });
+  }
+  closeProductModal();
+  loadProductsTable();
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Mahsulotni o\'chirmoqchimisiz?')) return;
+  await fetch(`${API}/api/products/${id}`, { method: 'DELETE' });
+  loadProductsTable();
+}
+
+// ── ORDERS ──
+async function loadOrdersTable() {
+  const orders = await fetch(`${API}/api/admin/orders`).then(r=>r.json());
+  document.getElementById('orders-table').innerHTML = orders.map(o => `
+    <tr>
+      <td>#${o.id}</td>
+      <td>${o.user?.full_name||'—'}<br><small style="color:var(--muted)">${o.user?.phone||''}</small></td>
+      <td style="max-width:200px;font-size:12px">${o.items.map(i=>`${i.product_title} x${i.quantity}`).join(', ')}</td>
+      <td>${o.total_price.toLocaleString()} so'm</td>
+      <td><span class="badge badge-${statusColor(o.status)}">${statusText(o.status)}</span></td>
+      <td style="font-size:12px">${new Date(o.created_at).toLocaleDateString()}</td>
+      <td>
+        <select onchange="changeOrderStatus(${o.id}, this.value)" style="padding:4px 8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:12px">
+          ${['pending','confirmed','delivering','delivered','cancelled'].map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${statusText(s)}</option>`).join('')}
+        </select>
+      </td>
+    </tr>`).join('');
+}
+
+async function changeOrderStatus(id, status) {
+  await fetch(`${API}/api/admin/orders/${id}/status?status=${status}`, { method: 'PUT' });
+}
+
+// ── USERS ──
+async function loadUsersTable() {
+  const users = await fetch(`${API}/api/admin/users`).then(r=>r.json());
+  document.getElementById('users-table').innerHTML = users.map(u => `
+    <tr>
+      <td>${u.telegram_id}</td>
+      <td>${u.full_name||'—'}</td>
+      <td>${u.phone||'—'}</td>
+      <td>${u.language||'uz'}</td>
+      <td><span class="badge ${u.is_verified?'badge-green':'badge-yellow'}">${u.is_verified?'✅ Tasdiqlangan':'⏳ Tasdiqlanmagan'}</span></td>
+    </tr>`).join('');
+}
+
+function statusText(s) {
+  return {pending:'⏳ Kutilmoqda',confirmed:'✅ Tasdiqlandi',delivering:'🚚 Yetkazilmoqda',delivered:'📦 Yetkazildi',cancelled:'❌ Bekor'}[s]||s;
+}
+function statusColor(s) {
+  return {pending:'yellow',confirmed:'blue',delivering:'blue',delivered:'green',cancelled:'red'}[s]||'blue';
+}
+
+init();
+</script>
+</body>
+</html>
