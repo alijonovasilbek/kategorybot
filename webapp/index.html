@@ -18,29 +18,31 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .nav-logo{width:30px;height:30px;border-radius:10px;object-fit:cover;background:var(--primary-light);display:none;flex-shrink:0}
 .nav-logo.show{display:block}
 .nav-title{font-weight:800;font-size:17px;flex:1}
-.theme-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.theme-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--muted)}
 .nav-lang{display:flex;gap:4px}
 .nav-lang button{padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--bg);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
 .nav-lang button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 .search-bar{padding:10px 16px 0}
 .search-wrap{position:relative}
-.search-wrap::before{content:"🔍";position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:15px;z-index:1}
+.search-wrap::before{content:"⌕";position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:17px;color:var(--muted);z-index:1}
 .search-input{width:100%;padding:10px 16px 10px 42px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);font-size:14px;font-family:inherit;outline:none}
 .categories-scroll{display:flex;gap:10px;padding:12px 16px;overflow-x:auto;scrollbar-width:none}
 .categories-scroll::-webkit-scrollbar{display:none}
-.cat-chip{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
-.cat-chip-img{width:58px;height:58px;border-radius:50%;object-fit:cover;background:var(--primary-light);border:2.5px solid transparent;transition:border-color .2s;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:24px}
-.cat-chip-img img{width:100%;height:100%;object-fit:cover;display:block}
-.cat-chip.active .cat-chip-img{border-color:var(--primary)}
+.cat-chip{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+.cat-chip-img{width:58px;height:58px;border-radius:18px;object-fit:cover;background:var(--card);border:1.5px solid var(--border);transition:border-color .2s,background .2s,transform .2s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.cat-chip-img img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(1) saturate(.2) contrast(.95);opacity:.92}
+.cat-chip.active .cat-chip-img{border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.08);transform:translateY(-1px)}
 .cat-chip-name{font-size:11px;font-weight:700;color:var(--muted);text-align:center;max-width:64px}
-.cat-chip.active .cat-chip-name{color:var(--primary)}
+.cat-chip.active .cat-chip-name{color:var(--success)}
 .section-title{font-size:16px;font-weight:800;padding:4px 16px 8px}
 .products-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px 12px}
 .product-card{background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:transform .15s;position:relative}
 .product-card:active{transform:scale(.97)}
 .product-card-img{width:100%;aspect-ratio:1;object-fit:cover;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;overflow:hidden}
 .product-card-img img{width:100%;height:100%;object-fit:cover}
-.wishlist-btn{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.9);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;z-index:2}
+.wishlist-btn{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.96);border:1px solid rgba(226,232,240,.9);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;color:var(--muted);transition:color .2s,border-color .2s,transform .15s}
+.wishlist-btn.is-active{color:#ec4899;border-color:rgba(236,72,153,.28)}
+.wishlist-btn:active{transform:scale(.94)}
 .product-card-body{padding:10px 10px 46px;position:relative}
 .product-card-title{font-size:13px;font-weight:700;line-height:1.3;margin-bottom:4px}
 .product-price{font-size:15px;font-weight:900;color:var(--primary)}
@@ -118,23 +120,33 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .profile-name{font-size:18px;font-weight:800;margin-bottom:4px}
 .profile-phone{font-size:14px;color:var(--muted)}
 .profile-row{background:var(--card);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer}
-.profile-row-icon{font-size:20px}
+.profile-row-icon{width:20px;height:20px;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .profile-row-text{font-size:15px;font-weight:600;flex:1}
-.profile-row-arrow{color:var(--muted)}
+.profile-row-arrow{width:16px;height:16px;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 #map{height:280px;border-radius:var(--radius);margin:12px 16px}
 .map-address-input{width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:inherit;outline:none;background:var(--card);margin-bottom:8px}
 .delivery-info-box{background:var(--primary-light);border-radius:12px;padding:12px 16px;margin:0 16px 8px;font-size:13px;font-weight:700;color:var(--primary)}
 .confirm-btn{width:calc(100% - 32px);margin:0 16px 16px;padding:14px;border-radius:14px;background:var(--success);color:#fff;border:none;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
-.bottom-tabs{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:300;padding:0 0 env(safe-area-inset-bottom,0)}
-.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:none;background:none;cursor:pointer;font-family:inherit}
-.tab-icon{font-size:22px;position:relative}
+.bottom-tabs{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:300;padding:4px 0 env(safe-area-inset-bottom,0);box-shadow:0 -8px 24px rgba(15,23,42,.06)}
+.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 4px 8px;border:none;background:none;cursor:pointer;font-family:inherit;color:var(--muted)}
+.tab-icon{width:22px;height:22px;position:relative;color:currentColor;display:flex;align-items:center;justify-content:center}
 .tab-label{font-size:10px;font-weight:700;color:var(--muted)}
-.tab-btn.active .tab-label{color:var(--primary)}
+.tab-btn.active{color:var(--success)}
+.tab-btn.active .tab-label{color:var(--success)}
 .badge{position:absolute;top:-4px;right:-8px;background:var(--accent);color:#fff;border-radius:10px;font-size:10px;font-weight:800;padding:1px 5px;min-width:16px;text-align:center}
 .content-area{padding-top:112px;padding-bottom:80px}
 .page-inner{padding-top:56px;padding-bottom:80px}
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
-.empty-state .empty-icon{font-size:56px;margin-bottom:12px}
+.empty-state .empty-icon{width:56px;height:56px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.icon{display:inline-flex;align-items:center;justify-content:center;line-height:0}
+.icon svg{width:100%;height:100%}
+.theme-btn .icon,.nav-back .icon,#detail-wish-btn .icon,.wishlist-btn .icon,.tab-icon .icon,.profile-row-icon .icon,.profile-row-arrow .icon,.profile-avatar .icon,.empty-icon .icon,.cat-chip-img .icon,.product-card-img .icon,.cart-item-img .icon{width:100%;height:100%}
+.nav-back{color:var(--muted);font-size:0}
+#detail-wish-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--muted)}
+#detail-wish-btn.is-active{color:#ec4899;border-color:rgba(236,72,153,.25)}
+.product-card-img .icon,.cart-item-img .icon{width:52px;height:52px;color:rgba(91,91,214,.45)}
+.cat-chip-img .icon{width:24px;height:24px}
+.profile-avatar{color:var(--primary)}
 .empty-state p{font-size:15px;font-weight:600}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(30,30,50,.92);color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:700;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -166,11 +178,11 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 <body>
 
 <div class="nav" id="main-nav">
-  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" style="order:3">🌙</button>
-  <div class="nav-title" id="nav-title">🛍️ Do'kon</div>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" style="order:3"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A7.5 7.5 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z"/></svg></span></button>
+  <div class="nav-title" id="nav-title">Do'kon</div>
   <div class="nav-lang">
-    <button id="btn-uz" class="active" onclick="setLang('uz')">🇺🇿 UZ</button>
-    <button id="btn-ru" onclick="setLang('ru')">🇷🇺 RU</button>
+    <button id="btn-uz" class="active" onclick="setLang('uz')">UZ</button>
+    <button id="btn-ru" onclick="setLang('ru')">RU</button>
   </div>
 </div>
 
@@ -186,9 +198,9 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 <!-- PRODUCT DETAIL -->
 <div class="page" id="page-product">
   <div class="nav">
-    <button class="nav-back" onclick="closePage('page-product')">←</button>
+    <button class="nav-back" onclick="closePage('page-product')"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg></span></button>
     <div class="nav-title" id="product-nav-title">Mahsulot</div>
-    <button style="background:none;border:none;font-size:22px;cursor:pointer" id="detail-wish-btn" onclick="toggleWishFromDetail()">🤍</button>
+    <button id="detail-wish-btn" onclick="toggleWishFromDetail()"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m12 20.2-1.1-1C5.6 14.4 2 11.1 2 7.1 2 4.3 4.2 2 7 2c1.6 0 3.2.8 4.1 2.1C12 2.8 13.6 2 15.2 2 18 2 20.2 4.3 20.2 7.1c0 4-3.6 7.3-8.9 12.1L12 20.2Z"/></svg></span></button>
   </div>
   <div class="page-inner" id="product-detail-inner"></div>
 </div>
@@ -196,8 +208,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 <!-- CART -->
 <div class="page tab-page" id="page-cart">
   <div class="nav">
-    <button class="nav-back" onclick="closePage('page-cart')">←</button>
-    <div class="nav-title" id="cart-nav-title">🛒 Savatcha</div>
+    <button class="nav-back" onclick="closePage('page-cart')"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg></span></button>
+    <div class="nav-title" id="cart-nav-title">Savatcha</div>
   </div>
   <div class="page-inner" id="cart-inner"></div>
 </div>
@@ -205,8 +217,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 <!-- ORDERS -->
 <div class="page tab-page" id="page-orders">
   <div class="nav">
-    <button class="nav-back" onclick="closePage('page-orders')">←</button>
-    <div class="nav-title">📋 Buyurtmalar</div>
+    <button class="nav-back" onclick="closePage('page-orders')"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg></span></button>
+    <div class="nav-title">Buyurtmalar</div>
   </div>
   <div class="page-inner" id="orders-inner"></div>
 </div>
@@ -214,8 +226,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 <!-- PROFILE -->
 <div class="page tab-page" id="page-profile">
   <div class="nav">
-    <button class="nav-back" onclick="closePage('page-profile')">←</button>
-    <div class="nav-title">👤 Profil</div>
+    <button class="nav-back" onclick="closePage('page-profile')"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg></span></button>
+    <div class="nav-title">Profil</div>
   </div>
   <div class="page-inner" id="profile-inner"></div>
 </div>
@@ -223,8 +235,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 <!-- WISHLIST PAGE -->
 <div class="page tab-page" id="page-wishlist">
   <div class="nav">
-    <button class="nav-back" onclick="closePage('page-wishlist')">←</button>
-    <div class="nav-title">❤️ Sevimlilar</div>
+    <button class="nav-back" onclick="closePage('page-wishlist')"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg></span></button>
+    <div class="nav-title">Sevimlilar</div>
   </div>
   <div class="page-inner" id="wishlist-inner"></div>
 </div>
@@ -232,8 +244,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 <!-- CHECKOUT / MAP -->
 <div class="page" id="page-checkout">
   <div class="nav">
-    <button class="nav-back" onclick="closePage('page-checkout')">←</button>
-    <div class="nav-title">📍 Manzil tanlash</div>
+    <button class="nav-back" onclick="closePage('page-checkout')"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg></span></button>
+    <div class="nav-title">Manzil tanlash</div>
   </div>
   <div class="page-inner">
     <div style="padding:12px 16px 4px;font-size:13px;color:var(--muted)">Xaritada yetkazib berish manzilini tanlang</div>
@@ -243,23 +255,23 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
       <input class="map-address-input" id="map-address" placeholder="Manzil..." readonly/>
       <textarea style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:inherit;outline:none;resize:none;background:var(--card);margin-bottom:8px" id="order-comment" placeholder="Izoh (ixtiyoriy)..." rows="2"></textarea>
     </div>
-    <button class="confirm-btn" onclick="confirmOrder()">✅ Buyurtmani tasdiqlash</button>
+    <button class="confirm-btn" onclick="confirmOrder()">Buyurtmani tasdiqlash</button>
   </div>
 </div>
 
 <div class="bottom-tabs">
   <button class="tab-btn active" id="tab-home" onclick="switchTab('home')">
-    <div class="tab-icon">🏠</div><div class="tab-label" id="tab-label-home">Asosiy</div>
+    <div class="tab-icon"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/></svg></span></div><div class="tab-label" id="tab-label-home">Asosiy</div>
   </button>
   <button class="tab-btn" id="tab-cart" onclick="switchTab('cart')">
-    <div class="tab-icon">🛒<span class="badge" id="cart-badge" style="display:none">0</span></div>
+    <div class="tab-icon"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M3.5 4H6l2.3 10.2a1 1 0 0 0 1 .8h8.7a1 1 0 0 0 1-.8L20 8H7"/></svg></span><span class="badge" id="cart-badge" style="display:none">0</span></div>
     <div class="tab-label" id="tab-label-cart">Savat</div>
   </button>
   <button class="tab-btn" id="tab-orders" onclick="switchTab('orders')">
-    <div class="tab-icon">📋</div><div class="tab-label" id="tab-label-orders">Buyurtmalar</div>
+    <div class="tab-icon"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3.5h8l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 7 19V5A1.5 1.5 0 0 1 8.5 3.5Z"/><path d="M16.5 3.5V8h4"/><path d="M10 12h6"/><path d="M10 16h6"/></svg></span></div><div class="tab-label" id="tab-label-orders">Buyurtmalar</div>
   </button>
   <button class="tab-btn" id="tab-profile" onclick="switchTab('profile')">
-    <div class="tab-icon">👤</div><div class="tab-label" id="tab-label-profile">Profil</div>
+    <div class="tab-icon"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.25"/><path d="M5 19c1.4-2.8 4-4.2 7-4.2s5.6 1.4 7 4.2"/></svg></span></div><div class="tab-label" id="tab-label-profile">Profil</div>
   </button>
 </div>
 
@@ -307,6 +319,37 @@ let shopSettings = {
   logo_url: null
 };
 
+const ICONS = {
+  moon: {body:'<path d="M20 14.5A7.5 7.5 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z"/>'},
+  sun: {body:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2"/><path d="M12 19.3v2.2"/><path d="M4.9 4.9l1.6 1.6"/><path d="M17.5 17.5l1.6 1.6"/><path d="M2.5 12h2.2"/><path d="M19.3 12h2.2"/><path d="M4.9 19.1l1.6-1.6"/><path d="M17.5 6.5l1.6-1.6"/>'},
+  heart: {body:'<path d="m12 20.2-1.1-1C5.6 14.4 2 11.1 2 7.1 2 4.3 4.2 2 7 2c1.6 0 3.2.8 4.1 2.1C12 2.8 13.6 2 15.2 2 18 2 20.2 4.3 20.2 7.1c0 4-3.6 7.3-8.9 12.1L12 20.2Z"/>'},
+  heartFilled: {body:'<path d="m12 20.2-1.1-1C5.6 14.4 2 11.1 2 7.1 2 4.3 4.2 2 7 2c1.6 0 3.2.8 4.1 2.1C12 2.8 13.6 2 15.2 2 18 2 20.2 4.3 20.2 7.1c0 4-3.6 7.3-8.9 12.1L12 20.2Z"/>',fill:true,strokeWidth:1.4},
+  grid: {body:'<rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/>'},
+  bag: {body:'<path d="M6 8h12l-1 11a2 2 0 0 1-2 1.8H9A2 2 0 0 1 7 19Z"/><path d="M9 9V7a3 3 0 0 1 6 0v2"/>'},
+  search: {body:'<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>'},
+  lock: {body:'<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7.8A4 4 0 0 1 12 4a4 4 0 0 1 4 3.8V10"/>'},
+  orders: {body:'<path d="M8.5 3.5h8l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 7 19V5A1.5 1.5 0 0 1 8.5 3.5Z"/><path d="M16.5 3.5V8h4"/><path d="M10 12h6"/><path d="M10 16h6"/>'},
+  profile: {body:'<circle cx="12" cy="8" r="3.25"/><path d="M5 19c1.4-2.8 4-4.2 7-4.2s5.6 1.4 7 4.2"/>'},
+  globe: {body:'<circle cx="12" cy="12" r="9"/><path d="M3.5 12h17"/><path d="M12 3c2.5 2.4 4 5.6 4 9s-1.5 6.6-4 9c-2.5-2.4-4-5.6-4-9s1.5-6.6 4-9Z"/>'},
+  chevronRight: {body:'<path d="m9 6 6 6-6 6"/>'},
+  logout: {body:'<path d="M10 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4"/><path d="M13 12h8"/><path d="m18 7 5 5-5 5"/>'}
+};
+
+function icon(name, extraClass=''){
+  const def=ICONS[name];
+  if(!def)return '';
+  return `<span class="icon${extraClass?` ${extraClass}`:''}" aria-hidden="true"><svg viewBox="0 0 24 24" fill="${def.fill?'currentColor':'none'}" stroke="currentColor" stroke-width="${def.strokeWidth||1.9}" stroke-linecap="round" stroke-linejoin="round">${def.body}</svg></span>`;
+}
+function wishlistIcon(active=false){return icon(active?'heartFilled':'heart')}
+function setWishlistButton(btn,active){
+  if(!btn)return;
+  btn.innerHTML=wishlistIcon(active);
+  btn.classList.toggle('is-active',!!active);
+}
+function emptyState(iconName,text,action=''){
+  return `<div class="empty-state"><div class="empty-icon">${icon(iconName)}</div><p>${text}</p>${action}</div>`;
+}
+
 const T = {
   uz: {
     home:'Asosiy',cart:'Savat',orders:'Buyurtmalar',profile:'Profil',
@@ -315,8 +358,8 @@ const T = {
     cart_empty:'Savatcha bo\'sh',orders_empty:'Buyurtmalar yo\'q',
     wishlist_empty:'Sevimlilar bo\'sh',
     total:'Mahsulotlar:',delivery:'Yetkazib berish:',discount:'Chegirma:',
-    final_total:'Jami:',checkout:'📍 Buyurtma berish',
-    confirm_order:'✅ Buyurtmani tasdiqlash',
+    final_total:'Jami:',checkout:'Buyurtma berish',
+    confirm_order:'Buyurtmani tasdiqlash',
     reviews:'Izohlar',your_review:'Sizning bahoyingiz',
     submit_review:'Yuborish',free_delivery:'Bepul yetkazib berish',
     coupon_applied:'✅ Kupon qo\'llandi',coupon_error:'❌ Kupon topilmadi',
@@ -324,7 +367,7 @@ const T = {
     added_wish:'❤️ Sevimlilarga qo\'shildi',removed_wish:'🤍 Sevimlilardan olib tashlandi',
     order_placed:'✅ Buyurtma qabul qilindi!',
     map_select:'Xaritada manzilni tanlang!',
-    status:{pending:'⏳ Kutilmoqda',confirmed:'✅ Tasdiqlandi',delivering:'🚚 Yetkazilmoqda',delivered:'📦 Yetkazildi',cancelled:'❌ Bekor qilindi'}
+    status:{pending:'Kutilmoqda',confirmed:'Tasdiqlandi',delivering:'Yetkazilmoqda',delivered:'Yetkazildi',cancelled:'Bekor qilindi'}
   },
   ru: {
     home:'Главная',cart:'Корзина',orders:'Заказы',profile:'Профиль',
@@ -333,8 +376,8 @@ const T = {
     cart_empty:'Корзина пуста',orders_empty:'Заказов нет',
     wishlist_empty:'Избранное пусто',
     total:'Товары:',delivery:'Доставка:',discount:'Скидка:',
-    final_total:'Итого:',checkout:'📍 Оформить заказ',
-    confirm_order:'✅ Подтвердить заказ',
+    final_total:'Итого:',checkout:'Оформить заказ',
+    confirm_order:'Подтвердить заказ',
     reviews:'Отзывы',your_review:'Ваша оценка',
     submit_review:'Отправить',free_delivery:'Бесплатная доставка',
     coupon_applied:'✅ Купон применён',coupon_error:'❌ Купон не найден',
@@ -342,7 +385,7 @@ const T = {
     added_wish:'❤️ Добавлено в избранное',removed_wish:'🤍 Удалено из избранного',
     order_placed:'✅ Заказ принят!',
     map_select:'Выберите адрес на карте!',
-    status:{pending:'⏳ Ожидание',confirmed:'✅ Подтверждён',delivering:'🚚 Доставляется',delivered:'📦 Доставлен',cancelled:'❌ Отменён'}
+    status:{pending:'Ожидание',confirmed:'Подтверждён',delivering:'Доставляется',delivered:'Доставлен',cancelled:'Отменён'}
   }
 };
 
@@ -360,7 +403,7 @@ function normalizePhone(phone){return phone.replace(/[^\d+]/g,'')}
 function applyTheme(){
   document.body.classList.toggle('dark',theme==='dark');
   const btn=document.getElementById('theme-btn');
-  if(btn)btn.textContent=theme==='dark'?'☀️':'🌙';
+  if(btn)btn.innerHTML=icon(theme==='dark'?'sun':'moon');
 }
 function toggleTheme(){
   theme=theme==='dark'?'light':'dark';
@@ -538,9 +581,9 @@ async function loadCategories(){
   const cats=await(await fetch(`${API}/api/categories`)).json();
   const el=document.getElementById('categories-scroll');
   el.innerHTML=`<div class="cat-chip ${!selectedCategoryId?'active':''}" onclick="filterByCategory(null)">
-    <div class="cat-chip-img">🛍️</div><div class="cat-chip-name">${lang==='uz'?'Barchasi':'Все'}</div></div>`+
+    <div class="cat-chip-img">${icon('grid')}</div><div class="cat-chip-name">${lang==='uz'?'Barchasi':'Все'}</div></div>`+
   cats.map(c=>`<div class="cat-chip ${selectedCategoryId===c.id?'active':''}" onclick="filterByCategory(${c.id})">
-    <div class="cat-chip-img">${c.image_url?`<img src="${c.image_url}" onerror="this.parentNode.textContent='🗂️'"/>`:'🗂️'}</div>
+    <div class="cat-chip-img">${c.image_url?`<img src="${c.image_url}" onerror="this.parentNode.innerHTML=icon('grid')"/>`:icon('grid')}</div>
     <div class="cat-chip-name">${catName(c)}</div></div>`).join('');
 }
 
@@ -557,13 +600,13 @@ async function loadProducts(categoryId=null,search=''){
 function renderProducts(products){
   const grid=document.getElementById('products-grid');
   if(!products.length){
-    grid.innerHTML=`<div style="grid-column:1/-1" class="empty-state"><div class="empty-icon">🔍</div><p>${lang==='uz'?'Mahsulot topilmadi':'Товары не найдены'}</p></div>`;return;
+    grid.innerHTML=`<div style="grid-column:1/-1">${emptyState('search',lang==='uz'?'Mahsulot topilmadi':'Товары не найдены')}</div>`;return;
   }
   grid.innerHTML=products.map(p=>`
     <div class="product-card" onclick="openProduct(${p.id})">
       <div class="product-card-img">
-        ${p.images&&p.images[0]?`<img src="${p.images[0]}" onerror="this.parentNode.innerHTML='🛍️'"/>`:'🛍️'}
-        <button class="wishlist-btn" onclick="event.stopPropagation();toggleWish(${p.id},this)">${wishlistIds.has(p.id)?'❤️':'🤍'}</button>
+        ${p.images&&p.images[0]?`<img src="${p.images[0]}" onerror="this.parentNode.innerHTML=icon('bag')"/>`:icon('bag')}
+        <button class="wishlist-btn${wishlistIds.has(p.id)?' is-active':''}" onclick="event.stopPropagation();toggleWish(${p.id},this)">${wishlistIcon(wishlistIds.has(p.id))}</button>
       </div>
       <div class="product-card-body">
         <div class="product-card-title">${title(p)}</div>
@@ -584,13 +627,6 @@ function renderCardCartControl(pid){
     <button class="card-qty-btn" onclick="updateQty(${pid},${qty-1},true)">−</button>
     <span class="card-qty-num">${qty}</span>
     <button class="card-qty-btn" onclick="updateQty(${pid},${qty+1},true)">+</button>
-    <div class="profile-row" onclick="toggleTheme()">
-      <div class="profile-row-icon">${theme==='dark'?'☀️':'🌙'}</div>
-      <div class="profile-row-text">${theme==='dark'?(lang==='uz'?'Light rejim':'Светлая тема'):(lang==='uz'?'Dark rejim':'Тёмная тема')}</div>
-      <div class="profile-row-arrow">вЂє</div>
-    </div>
-    ${isBrowserMode()&&u?`<div class="profile-row" onclick="logoutBrowserAuth()"><div class="profile-row-icon">рџљЄ</div><div class="profile-row-text">${lang==='uz'?'Chiqish':'Выйти'}</div><div class="profile-row-arrow">вЂє</div></div>`:''}
-    ${!u?`<div class="profile-row" onclick="openAuthOverlay()"><div class="profile-row-icon">рџ”ђ</div><div class="profile-row-text">${lang==='uz'?'Telegram kod bilan kirish':'Войти по коду Telegram'}</div><div class="profile-row-arrow">вЂє</div></div>`:''}
   </div>`;
 }
 
@@ -604,8 +640,8 @@ function onSearch(val){clearTimeout(searchTimer);searchTimer=setTimeout(()=>load
 async function toggleWish(pid,btn){
   if(!requireAuth())return;
   const res=await(await fetch(`${API}/api/wishlist/${userId}/${pid}`,{method:'POST'})).json();
-  if(res.added){wishlistIds.add(pid);btn.textContent='❤️';showToast(t('added_wish'));}
-  else{wishlistIds.delete(pid);btn.textContent='🤍';showToast(t('removed_wish'));}
+  if(res.added){wishlistIds.add(pid);setWishlistButton(btn,true);showToast(t('added_wish'));}
+  else{wishlistIds.delete(pid);setWishlistButton(btn,false);showToast(t('removed_wish'));}
 }
 
 async function toggleWishFromDetail(){
@@ -613,8 +649,8 @@ async function toggleWishFromDetail(){
   const pid=currentProduct.id;
   const res=await(await fetch(`${API}/api/wishlist/${userId}/${pid}`,{method:'POST'})).json();
   const btn=document.getElementById('detail-wish-btn');
-  if(res.added){wishlistIds.add(pid);btn.textContent='❤️';showToast(t('added_wish'));}
-  else{wishlistIds.delete(pid);btn.textContent='🤍';showToast(t('removed_wish'));}
+  if(res.added){wishlistIds.add(pid);setWishlistButton(btn,true);showToast(t('added_wish'));}
+  else{wishlistIds.delete(pid);setWishlistButton(btn,false);showToast(t('removed_wish'));}
 }
 
 async function openProduct(id){
@@ -622,13 +658,13 @@ async function openProduct(id){
   currentProduct=p;currentQty=cartItemsMap.get(id)||1;
   const imgs=p.images&&p.images.length?p.images:[];
   const inWish=wishlistIds.has(id);
-  document.getElementById('detail-wish-btn').textContent=inWish?'❤️':'🤍';
+  setWishlistButton(document.getElementById('detail-wish-btn'),inWish);
   const inner=document.getElementById('product-detail-inner');
   inner.innerHTML=`
     <div>
       <div class="product-images">
         <div class="product-images-scroll" id="prod-img-scroll">
-          ${imgs.length?imgs.map(img=>`<img src="${img}" onerror="this.style.display='none'"/>`).join(''):'<div style="width:100vw;height:280px;display:flex;align-items:center;justify-content:center;font-size:80px;background:#ededff">🛍️</div>'}
+          ${imgs.length?imgs.map(img=>`<img src="${img}" onerror="this.style.display='none'"/>`).join(''):`<div style="width:100vw;height:280px;display:flex;align-items:center;justify-content:center;background:#ededff">${icon('bag')}</div>`}
         </div>
         ${imgs.length>1?`<div class="product-images-dots">${imgs.map((_,i)=>`<span class="${i===0?'active':''}"></span>`).join('')}</div>`:''}
       </div>
@@ -678,7 +714,7 @@ async function loadSimilar(pid,catId){
     <div class="section-title">${t('similar')}</div>
     <div class="products-grid">${similar.map(s=>`
       <div class="product-card" onclick="openProduct(${s.id})">
-        <div class="product-card-img">${s.images&&s.images[0]?`<img src="${s.images[0]}"/>`:'🛍️'}</div>
+        <div class="product-card-img">${s.images&&s.images[0]?`<img src="${s.images[0]}"/>`:icon('bag')}</div>
         <div class="product-card-body">
           <div class="product-card-title">${title(s)}</div>
           <div class="product-price">${fmt(s.price)} so'm</div>
@@ -752,17 +788,17 @@ let cartAppliedCoupon=null;
 async function loadCart(){
   const inner=document.getElementById('cart-inner');
   if(!userId){
-    inner.innerHTML=`<div class="empty-state"><div class="empty-icon">🔐</div><p>${lang==='uz'?'Savat uchun tizimga kiring':'Войдите, чтобы открыть корзину'}</p><button class="auth-btn" style="margin-top:12px" onclick="openAuthOverlay()">${lang==='uz'?'Telegram kod bilan kirish':'Войти по коду Telegram'}</button></div>`;
+    inner.innerHTML=emptyState('lock',lang==='uz'?'Savat uchun tizimga kiring':'Войдите, чтобы открыть корзину',`<button class="auth-btn" style="margin-top:12px" onclick="openAuthOverlay()">${lang==='uz'?'Telegram kod bilan kirish':'Войти по коду Telegram'}</button>`);
     return;
   }
-  if(!userId){inner.innerHTML=`<div class="empty-state"><div class="empty-icon">🛒</div><p>${t('cart_empty')}</p></div>`;return;}
+  if(!userId){inner.innerHTML=emptyState('bag',t('cart_empty'));return;}
   const items=await(await fetch(`${API}/api/cart/${userId}`)).json();
-  if(!items.length){inner.innerHTML=`<div class="empty-state"><div class="empty-icon">🛒</div><p>${t('cart_empty')}</p></div>`;return;}
+  if(!items.length){inner.innerHTML=emptyState('bag',t('cart_empty'));return;}
   const subtotal=items.reduce((s,i)=>s+i.product.price*i.quantity,0);
   const disc=cartAppliedCoupon?calcDiscount(cartAppliedCoupon,subtotal):0;
   inner.innerHTML=`<div style="padding:12px 16px 0">${items.map(i=>`
     <div class="cart-item">
-      <div class="cart-item-img">${i.product.images&&i.product.images[0]?`<img src="${i.product.images[0]}"/>`:'🛍️'}</div>
+      <div class="cart-item-img">${i.product.images&&i.product.images[0]?`<img src="${i.product.images[0]}"/>`:icon('bag')}</div>
       <div class="cart-item-info">
         <div class="cart-item-title">${title(i.product)}</div>
         <div class="cart-item-price">${fmt(i.product.price*i.quantity)} so'm</div>
@@ -835,7 +871,7 @@ function initMap(){
       deliveryPrice=dr.price;deliveryDist=dr.distance_km;
       const box=document.getElementById('delivery-info-box');
       box.style.display='block';
-      box.textContent=dr.price===0?`🚚 ${t('free_delivery')} (${dr.distance_km.toFixed(1)} km)`:`🚚 Yetkazib berish: ${fmt(dr.price)} so'm (${dr.distance_km.toFixed(1)} km)`;
+      box.textContent=dr.price===0?`${t('free_delivery')} (${dr.distance_km.toFixed(1)} km)`:`Yetkazib berish: ${fmt(dr.price)} so'm (${dr.distance_km.toFixed(1)} km)`;
     }catch{}
   });
 }
@@ -863,12 +899,12 @@ async function confirmOrder(){
 async function loadOrders(){
   const inner=document.getElementById('orders-inner');
   if(!userId){
-    inner.innerHTML=`<div class="empty-state"><div class="empty-icon">🔐</div><p>${lang==='uz'?'Buyurtmalarni ko\'rish uchun tizimga kiring':'Войдите, чтобы увидеть заказы'}</p><button class="auth-btn" style="margin-top:12px" onclick="openAuthOverlay()">${lang==='uz'?'Telegram kod bilan kirish':'Войти по коду Telegram'}</button></div>`;
+    inner.innerHTML=emptyState('lock',lang==='uz'?'Buyurtmalarni ko\'rish uchun tizimga kiring':'Войдите, чтобы увидеть заказы',`<button class="auth-btn" style="margin-top:12px" onclick="openAuthOverlay()">${lang==='uz'?'Telegram kod bilan kirish':'Войти по коду Telegram'}</button>`);
     return;
   }
-  if(!userId){inner.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><p>${t('orders_empty')}</p></div>`;return;}
+  if(!userId){inner.innerHTML=emptyState('orders',t('orders_empty'));return;}
   const orders=await(await fetch(`${API}/api/orders/${userId}`)).json();
-  if(!orders.length){inner.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><p>${t('orders_empty')}</p></div>`;return;}
+  if(!orders.length){inner.innerHTML=emptyState('orders',t('orders_empty'));return;}
   inner.innerHTML=`<div style="padding:12px 16px 0">${orders.map(o=>`
     <div class="order-card">
       <div class="order-header">
@@ -877,7 +913,7 @@ async function loadOrders(){
       </div>
       <div class="order-items-list">${o.items.map(i=>`${i.product_title} x${i.quantity}`).join(', ')}</div>
       <div class="order-total">${fmt(o.total_final)} so'm</div>
-      ${o.delivery_price>0?`<div style="font-size:12px;color:var(--muted)">🚚 Yetkazib berish: ${fmt(o.delivery_price)} so'm</div>`:''}
+      ${o.delivery_price>0?`<div style="font-size:12px;color:var(--muted)">Yetkazib berish: ${fmt(o.delivery_price)} so'm</div>`:''}
       <div style="font-size:12px;color:var(--muted);margin-top:4px">${new Date(o.created_at).toLocaleDateString()}</div>
     </div>`).join('')}</div>`;
 }
@@ -887,25 +923,32 @@ function loadProfile(){
   const u=userData;
   document.getElementById('profile-inner').innerHTML=`<div style="padding:16px">
     <div class="profile-card">
-      <div class="profile-avatar">👤</div>
+      <div class="profile-avatar">${icon('profile')}</div>
       <div class="profile-name">${u?.full_name||'Foydalanuvchi'}</div>
       <div class="profile-phone">${u?.phone||''}</div>
     </div>
     <div class="profile-row" onclick="switchTab('orders')">
-      <div class="profile-row-icon">📋</div>
+      <div class="profile-row-icon">${icon('orders')}</div>
       <div class="profile-row-text">${t('orders')}</div>
-      <div class="profile-row-arrow">›</div>
+      <div class="profile-row-arrow">${icon('chevronRight')}</div>
     </div>
     <div class="profile-row" onclick="openWishlist()">
-      <div class="profile-row-icon">❤️</div>
+      <div class="profile-row-icon">${wishlistIcon(true)}</div>
       <div class="profile-row-text">${lang==='uz'?'Sevimlilar':'Избранное'}</div>
-      <div class="profile-row-arrow">›</div>
+      <div class="profile-row-arrow">${icon('chevronRight')}</div>
     </div>
     <div class="profile-row" onclick="toggleProfileLang()">
-      <div class="profile-row-icon">🌐</div>
+      <div class="profile-row-icon">${icon('globe')}</div>
       <div class="profile-row-text">${lang==='uz'?"O'zbek → Русский":"Русский → O'zbek"}</div>
-      <div class="profile-row-arrow">›</div>
+      <div class="profile-row-arrow">${icon('chevronRight')}</div>
     </div>
+    <div class="profile-row" onclick="toggleTheme()">
+      <div class="profile-row-icon">${icon(theme==='dark'?'sun':'moon')}</div>
+      <div class="profile-row-text">${theme==='dark'?(lang==='uz'?'Light rejim':'Светлая тема'):(lang==='uz'?'Dark rejim':'Тёмная тема')}</div>
+      <div class="profile-row-arrow">${icon('chevronRight')}</div>
+    </div>
+    ${isBrowserMode()&&u?`<div class="profile-row" onclick="logoutBrowserAuth()"><div class="profile-row-icon">${icon('logout')}</div><div class="profile-row-text">${lang==='uz'?'Chiqish':'Выйти'}</div><div class="profile-row-arrow">${icon('chevronRight')}</div></div>`:''}
+    ${!u?`<div class="profile-row" onclick="openAuthOverlay()"><div class="profile-row-icon">${icon('lock')}</div><div class="profile-row-text">${lang==='uz'?'Telegram kod bilan kirish':'Войти по коду Telegram'}</div><div class="profile-row-arrow">${icon('chevronRight')}</div></div>`:''}
   </div>`;
 }
 
@@ -913,15 +956,15 @@ async function openWishlist(){
   openPage('page-wishlist');
   const inner=document.getElementById('wishlist-inner');
   if(!userId){
-    inner.innerHTML=`<div class="empty-state"><div class="empty-icon">🔐</div><p>${lang==='uz'?'Sevimlilar uchun tizimga kiring':'Войдите, чтобы открыть избранное'}</p><button class="auth-btn" style="margin-top:12px" onclick="openAuthOverlay()">${lang==='uz'?'Telegram kod bilan kirish':'Войти по коду Telegram'}</button></div>`;
+    inner.innerHTML=emptyState('lock',lang==='uz'?'Sevimlilar uchun tizimga kiring':'Войдите, чтобы открыть избранное',`<button class="auth-btn" style="margin-top:12px" onclick="openAuthOverlay()">${lang==='uz'?'Telegram kod bilan kirish':'Войти по коду Telegram'}</button>`);
     return;
   }
-  if(!userId){inner.innerHTML=`<div class="empty-state"><div class="empty-icon">❤️</div><p>${t('wishlist_empty')}</p></div>`;return;}
+  if(!userId){inner.innerHTML=emptyState('heart',t('wishlist_empty'));return;}
   const items=await(await fetch(`${API}/api/wishlist/${userId}`)).json();
-  if(!items.length){inner.innerHTML=`<div class="empty-state"><div class="empty-icon">❤️</div><p>${t('wishlist_empty')}</p></div>`;return;}
+  if(!items.length){inner.innerHTML=emptyState('heart',t('wishlist_empty'));return;}
   inner.innerHTML=`<div class="products-grid" style="padding-top:12px">${items.map(i=>`
     <div class="product-card" onclick="openProduct(${i.product_id})">
-      <div class="product-card-img">${i.product.images&&i.product.images[0]?`<img src="${i.product.images[0]}"/>`:'🛍️'}</div>
+      <div class="product-card-img">${i.product.images&&i.product.images[0]?`<img src="${i.product.images[0]}"/>`:icon('bag')}</div>
       <div class="product-card-body">
         <div class="product-card-title">${title(i.product)}</div>
         <div class="product-price">${fmt(i.product.price)} so'm</div>
